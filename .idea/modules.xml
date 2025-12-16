@@ -1,0 +1,10 @@
+<project version="4">
+    <component name="ProjectModuleManager">
+        <modules>
+            <module fileurl="file://$PROJECT_DIR$/.idea/mill_modules/core.iml" filepath="$PROJECT_DIR$/.idea/mill_modules/core.iml"/>
+            <module fileurl="file://$PROJECT_DIR$/.idea/mill_modules/core.test.iml" filepath="$PROJECT_DIR$/.idea/mill_modules/core.test.iml"/>
+            <module fileurl="file://$PROJECT_DIR$/.idea/mill_modules/examples.iml" filepath="$PROJECT_DIR$/.idea/mill_modules/examples.iml"/>
+            <module fileurl="file://$PROJECT_DIR$/.idea/mill_modules/mill-build.iml" filepath="$PROJECT_DIR$/.idea/mill_modules/mill-build.iml"/>
+        </modules>
+    </component>
+</project>
