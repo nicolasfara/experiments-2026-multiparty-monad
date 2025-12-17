@@ -3,7 +3,9 @@
   <component name="NewModuleRootManager" LANGUAGE_LEVEL="JDK_21">
     <output url="file://$MODULE_DIR$/../../out/mill-bsp-out/examples/bspBuildTargetCompileMerged.dest" />
     <exclude-output />
-    <content url="file://$MODULE_DIR$/../../examples" />
+    <content url="file://$MODULE_DIR$/../../examples">
+      <sourceFolder url="file://$MODULE_DIR$/../../examples/src" isTestSource="false" />
+    </content>
     <content url="file://$MODULE_DIR$/../../out/mill-bsp-out/examples/compileGeneratedSources.dest">
       <sourceFolder url="file://$MODULE_DIR$/../../out/mill-bsp-out/examples/compileGeneratedSources.dest" isTestSource="false" generated="true" />
     </content>
