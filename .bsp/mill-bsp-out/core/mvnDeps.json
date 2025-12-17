@@ -1,8 +1,0 @@
-{
-    "value": [
-        "org.typelevel::cats-core:2.13.0",
-        "org.typelevel::cats-free:2.13.0"
-    ],
-    "valueHash": 1839890334,
-    "inputsHash": 480321121
-}

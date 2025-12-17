@@ -1,9 +1,0 @@
-{
-    "value": [
-        "ref:v0:0264fed6:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/support/build_/MillMiscInfo.scala",
-        "ref:v0:d36b1aa2:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/support/build_/BuildFileImpl.scala",
-        "ref:v0:a13e3ea4:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/wrapped/build_/build.mill"
-    ],
-    "valueHash": -219431499,
-    "inputsHash": 240833349
-}

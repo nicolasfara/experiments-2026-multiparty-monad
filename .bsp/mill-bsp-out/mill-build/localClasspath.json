@@ -1,9 +1,0 @@
-{
-    "value": [
-        "ref:v0:c984eca8:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/compile-resources",
-        "ref:v0:c984eca8:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/resources",
-        "ref:v0:0e73bcc3:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp/mill-bsp-out/mill-build/compile.dest/transformed-classes"
-    ],
-    "valueHash": 1181708106,
-    "inputsHash": -758100385
-}

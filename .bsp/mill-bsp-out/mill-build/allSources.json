@@ -1,9 +1,0 @@
-{
-    "value": [
-        "ref:v0:34b23677:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/build.mill",
-        "ref:v0:c984eca8:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/src",
-        "ref:v0:8fa6b20d:/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/support"
-    ],
-    "valueHash": 112378050,
-    "inputsHash": -1065222124
-}
