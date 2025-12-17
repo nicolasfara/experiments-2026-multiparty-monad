@@ -1,0 +1,8 @@
+{
+    "value": [
+        "com.lihaoyi::mill-libs:1.1.0-RC3",
+        "com.lihaoyi::mill-runner-autooverride-api:1.1.0-RC3"
+    ],
+    "valueHash": -528385594,
+    "inputsHash": -1710980728
+}

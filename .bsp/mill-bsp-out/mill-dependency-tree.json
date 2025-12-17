@@ -1,0 +1,105 @@
+{
+  "Task.Anon@12f12fee(mill.javalib.bsp.BspJavaModule#bspBuildTargetScalacOptions)": {
+    "core.test.resolvedMvnDeps": {
+      "core.test.scalaOrganization": {},
+      "core.test.depManagement": {
+        "core.test.depManagement.super.JavaModule": {}
+      },
+      "core.test.checkGradleModules": {},
+      "core.test.scalaVersion": {},
+      "core.test.runMvnDeps": {},
+      "core.test.bomMvnDeps": {
+        "core.test.bomMvnDeps.super.JavaModule": {}
+      },
+      "core.test.mvnDeps": {},
+      "core.test.transitiveCoursierProjects": {},
+      "core.test.artifactTypes": {},
+      "core.test.compileMvnDeps": {},
+      "core.test.mandatoryMvnDeps": {
+        "core.test.scalaTestStyles": {},
+        "core.test.mandatoryMvnDeps.super.scalalib.ScalaModule": {
+          "core.test.scalaLibraryMvnDeps": {},
+          "core.test.mandatoryMvnDeps.super.javalib.JavaModule": {}
+        },
+        "core.test.scalaTestVersion": {}
+      },
+      "core.test.platformSuffix": {}
+    },
+    "core.test.allScalacOptions": {
+      "core.test.enablePluginScalacOptions": {
+        "core.test.scalacPluginMvnDeps": {}
+      },
+      "core.test.mandatoryScalacOptions": {
+        "core.test.mandatoryScalacOptions.super.ScalaModule": {}
+      },
+      "core.test.scalacOptions": {}
+    },
+    "core.test.localCompileClasspath": {
+      "core.test.unmanagedClasspath": {},
+      "core.test.compileResources": {}
+    }
+  },
+  "Task.Anon@7d10b5d3(mill.javalib.bsp.BspJavaModule#bspBuildTargetScalacOptions)": {
+    "examples.allScalacOptions": {
+      "examples.scalacOptions": {},
+      "examples.enablePluginScalacOptions": {
+        "examples.scalacPluginMvnDeps": {}
+      },
+      "examples.mandatoryScalacOptions": {}
+    },
+    "examples.localCompileClasspath": {
+      "examples.compileResources": {},
+      "examples.unmanagedClasspath": {}
+    },
+    "examples.resolvedMvnDeps": {
+      "examples.transitiveCoursierProjects": {},
+      "examples.platformSuffix": {},
+      "examples.bomMvnDeps": {},
+      "examples.runMvnDeps": {},
+      "examples.mandatoryMvnDeps": {
+        "examples.scalaLibraryMvnDeps": {},
+        "examples.mandatoryMvnDeps.super.javalib.JavaModule": {}
+      },
+      "examples.scalaOrganization": {},
+      "examples.mvnDeps": {},
+      "examples.compileMvnDeps": {},
+      "examples.depManagement": {},
+      "examples.artifactTypes": {},
+      "examples.repositories": {},
+      "examples.checkGradleModules": {},
+      "examples.scalaVersion": {}
+    }
+  },
+  "Task.Anon@1e96d128(mill.javalib.bsp.BspJavaModule#bspBuildTargetScalacOptions)": {
+    "core.resolvedMvnDeps": {
+      "core.scalaVersion": {},
+      "core.checkGradleModules": {},
+      "core.scalaOrganization": {},
+      "core.mvnDeps": {},
+      "core.artifactTypes": {},
+      "core.mandatoryMvnDeps": {
+        "core.mandatoryMvnDeps.super.javalib.JavaModule": {},
+        "core.scalaLibraryMvnDeps": {}
+      },
+      "core.bomMvnDeps": {},
+      "core.compileMvnDeps": {},
+      "core.transitiveCoursierProjects": {},
+      "core.depManagement": {},
+      "core.platformSuffix": {},
+      "mill.javalib.CoursierConfigModule/coursierEnv": {},
+      "core.repositories": {},
+      "core.runMvnDeps": {}
+    },
+    "core.localCompileClasspath": {
+      "core.compileResources": {},
+      "core.unmanagedClasspath": {}
+    },
+    "core.allScalacOptions": {
+      "core.mandatoryScalacOptions": {},
+      "core.enablePluginScalacOptions": {
+        "core.scalacPluginMvnDeps": {}
+      },
+      "core.scalacOptions": {}
+    }
+  }
+}

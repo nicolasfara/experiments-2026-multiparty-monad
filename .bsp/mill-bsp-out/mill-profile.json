@@ -1,0 +1,157 @@
+[
+  {
+    "label": "core.sources",
+    "millis": 7,
+    "valueHashChanged": false,
+    "inputsHash": 1965552611,
+    "previousInputsHash": 982560687
+  },
+  {
+    "label": "examples.compileGeneratedSources",
+    "millis": 0,
+    "cached": true,
+    "valueHashChanged": false,
+    "inputsHash": 134442639
+  },
+  {
+    "label": "core.generatedSources",
+    "millis": 5,
+    "cached": true,
+    "valueHashChanged": false,
+    "inputsHash": -285215256
+  },
+  {
+    "label": "core.compileGeneratedSources",
+    "millis": 4,
+    "cached": true,
+    "valueHashChanged": false,
+    "inputsHash": 1046363325
+  },
+  {
+    "label": "core.internalBspJavaModule.bspBuildTargetSources",
+    "millis": 0,
+    "cached": true,
+    "valueHashChanged": false,
+    "dependencies": [
+      "core.sources",
+      "core.generatedSources",
+      "core.compileGeneratedSources"
+    ],
+    "inputsHash": -1440424154
+  },
+  {
+    "label": "core.test.sources",
+    "millis": 6,
+    "valueHashChanged": false,
+    "inputsHash": 2145592243,
+    "previousInputsHash": -818537185
+  },
+  {
+    "label": "core.test.generatedSources",
+    "millis": 6,
+    "cached": true,
+    "valueHashChanged": false,
+    "inputsHash": 941274218
+  },
+  {
+    "label": "core.test.compileGeneratedSources",
+    "millis": 6,
+    "cached": true,
+    "valueHashChanged": false,
+    "inputsHash": -539581453
+  },
+  {
+    "label": "core.test.internalBspJavaModule.bspBuildTargetSources",
+    "millis": 0,
+    "cached": true,
+    "valueHashChanged": false,
+    "dependencies": [
+      "core.test.sources",
+      "core.test.generatedSources",
+      "core.test.compileGeneratedSources"
+    ],
+    "inputsHash": -969833453
+  },
+  {
+    "label": "examples.generatedSources",
+    "millis": 4,
+    "cached": true,
+    "valueHashChanged": false,
+    "inputsHash": -1819542684
+  },
+  {
+    "label": "examples.sources",
+    "millis": 9,
+    "valueHashChanged": false,
+    "inputsHash": -1892957238,
+    "previousInputsHash": -1802864404
+  },
+  {
+    "label": "examples.internalBspJavaModule.bspBuildTargetSources",
+    "millis": 1,
+    "cached": true,
+    "valueHashChanged": false,
+    "dependencies": [
+      "examples.sources",
+      "examples.generatedSources",
+      "examples.compileGeneratedSources"
+    ],
+    "inputsHash": -289495581
+  },
+  {
+    "label": "core.test.resources.super.JavaModule",
+    "millis": 1,
+    "valueHashChanged": false,
+    "inputsHash": 794846204,
+    "previousInputsHash": -696936152
+  },
+  {
+    "label": "Task.Anon@1984212d(mill.javalib.bsp.BspJavaModule#bspBuildTargetResources)",
+    "millis": 0,
+    "valueHashChanged": false,
+    "dependencies": [
+      "core.test.resources.super.JavaModule"
+    ],
+    "inputsHash": 917497109
+  },
+  {
+    "label": "examples.resources",
+    "millis": 1,
+    "valueHashChanged": false,
+    "inputsHash": 346787026,
+    "previousInputsHash": -564785851
+  },
+  {
+    "label": "Task.Anon@39f5b723(mill.javalib.bsp.BspJavaModule#bspBuildTargetResources)",
+    "millis": 0,
+    "valueHashChanged": false,
+    "dependencies": [
+      "examples.resources"
+    ],
+    "inputsHash": -116711499
+  },
+  {
+    "label": "core.resources",
+    "millis": 2,
+    "valueHashChanged": false,
+    "inputsHash": 1866362282,
+    "previousInputsHash": 383929662
+  },
+  {
+    "label": "Task.Anon@3a3ed300(mill.javalib.bsp.BspJavaModule#bspBuildTargetResources)",
+    "millis": 0,
+    "valueHashChanged": false,
+    "dependencies": [
+      "core.resources"
+    ],
+    "inputsHash": -511456920
+  },
+  {
+    "label": "version",
+    "millis": 1,
+    "cached": false,
+    "valueHashChanged": false,
+    "inputsHash": -415980177,
+    "previousInputsHash": -415980177
+  }
+]

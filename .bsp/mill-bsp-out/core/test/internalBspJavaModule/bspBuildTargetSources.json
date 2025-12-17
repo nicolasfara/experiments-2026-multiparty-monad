@@ -1,0 +1,12 @@
+{
+    "value": [
+        [
+            "file:///home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/core/test/src"
+        ],
+        [
+            "file:///home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp/mill-bsp-out/core/test/compileGeneratedSources.dest/"
+        ]
+    ],
+    "valueHash": 1087031725,
+    "inputsHash": -969833453
+}

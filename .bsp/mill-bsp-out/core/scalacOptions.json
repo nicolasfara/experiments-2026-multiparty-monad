@@ -1,0 +1,16 @@
+{
+    "value": [
+        "-Werror",
+        "-rewrite",
+        "-indent",
+        "-unchecked",
+        "-explain",
+        "-Xcheck-macros",
+        "-Wunused:imports",
+        "-experimental",
+        "-feature",
+        "-language:implicitConversions"
+    ],
+    "valueHash": 1392272944,
+    "inputsHash": -981650350
+}

@@ -11,7 +11,7 @@
       <excludeFolder url="file://$MODULE_DIR$/../../.settings" />
       <excludeFolder url="file://$MODULE_DIR$/../../out" />
     </content>
-    <orderEntry type="jdk" jdkName="BSP_jdk-21.0.8+9" jdkType="JavaSDK" />
+    <orderEntry type="jdk" jdkName="BSP_zulu21.46.19-ca-jdk21.0.9-linux_x64" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module-library" scope="TEST">
       <library name="BSP: mill-synthetic-root test dependencies">

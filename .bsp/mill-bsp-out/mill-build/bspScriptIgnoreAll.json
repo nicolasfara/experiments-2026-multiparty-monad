@@ -1,0 +1,12 @@
+{
+    "value": [
+        "**/src/",
+        "**/src-*/",
+        "**/resources/",
+        "**/out/",
+        "**/.bsp/mill-bsp-out/",
+        "**/target/"
+    ],
+    "valueHash": 234532901,
+    "inputsHash": -111358013
+}

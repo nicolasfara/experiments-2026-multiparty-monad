@@ -20,8 +20,8 @@ object MultiParty:
     case Placed[V, P <: Peer](value: PeerScope[P] => MultiParty[V] | V) extends MultiPartyGrammar[V on P]
     case Par[A, PA <: Peer, B, PB <: Peer](left: PeerScope[PA] => MultiParty[A], right: PeerScope[PB] => MultiParty[B])
         extends MultiPartyGrammar[(A on PA, B on PB)]
-    case Unicast[V, From <: Peer, To <: TieToSingle[From]](value: V on From) extends MultiPartyGrammar[V on To]
-    case Multicast[V, From <: Peer, To <: TieToMultiple[From]](value: V on From) extends MultiPartyGrammar[V on To]
+    case Unicast[V, From <: TieToSingle[To], To <: Peer](value: V on From) extends MultiPartyGrammar[V on To]
+    case Multicast[V, From <: TieToMultiple[To], To <: Peer](value: V on From) extends MultiPartyGrammar[V on To]
     case Await[V, P <: Peer: PeerScope](placed: V on P) extends MultiPartyGrammar[V]
     case AwaitAll[V, P <: Peer: PeerScope](placed: V on P)
         extends MultiPartyGrammar[Iterable[V]]
@@ -42,10 +42,10 @@ object MultiParty:
     given rps: PeerScope[PB] = new PeerScope[PB] {}
     Free.liftF(MultiPartyGrammar.Par[A, PA, B, PB](_ => left, _ => right))
 
-  inline def unicast[V, From <: Peer, To <: TieToSingle[From]](inline value: V on From): MultiParty[V on To] =
+  inline def unicast[V, From <: TieToSingle[To], To <: Peer](inline value: V on From): MultiParty[V on To] =
     Free.liftF(MultiPartyGrammar.Unicast[V, From, To](value))
 
-  inline def multicast[V, From <: Peer, To <: TieToMultiple[From]](inline value: V on From): MultiParty[V on To] =
+  inline def multicast[V, From <: TieToMultiple[To], To <: Peer](inline value: V on From): MultiParty[V on To] =
     Free.liftF(MultiPartyGrammar.Multicast[V, From, To](value))
 
   inline def await[V, P <: Peer: PeerScope](inline placed: V on P): MultiParty[V] =

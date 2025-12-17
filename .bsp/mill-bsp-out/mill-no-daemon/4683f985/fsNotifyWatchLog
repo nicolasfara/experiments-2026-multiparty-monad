@@ -1,0 +1,151 @@
+[watched-paths:unfiltered] /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/build.mill
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/compile-resources
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/resources
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/src
+[watched-paths:filtered] /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/build.mill
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/compile-resources
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/resources
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/mill-build/src
+[filter] (shouldBeWatched=true) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad
+[filter] (shouldBeWatched=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.bsp
+[filter] (shouldBeWatched=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.git
+[filter] (shouldBeWatched=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea
+[filter] (shouldBeWatched=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/core
+[filter] (shouldBeWatched=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/examples
+[filter] (shouldBeWatched=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/modules.xml~
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/modules.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/modules.xml~
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/modules.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/scala_compiler.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/scala_compiler.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/scala_compiler.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/scala_compiler.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.git/index.lock
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.git/index
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-dependency-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-invalidation-tree.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-profile.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-runner-state.json
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-chrome-profile.json
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/out/mill-active-command
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml
+/home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.idea/workspace.xml~
+[changed-paths] (hasWatchedPath=false) /home/nicolas/Documents/experiments/2026/experiments-2026-multiparty-monad/.git/index.lock
