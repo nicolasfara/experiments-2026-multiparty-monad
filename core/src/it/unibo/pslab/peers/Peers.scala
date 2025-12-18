@@ -1,20 +1,13 @@
 package it.unibo.pslab.peers
 
 object Peers:
-  type Peer = { type Tie }
+  sealed trait Multiplicity
 
-  sealed trait TieToSingle[P <: Peer]:
-    type Tie <: Multiplicity.Single[P]
+  object Multiplicity:
+    sealed trait Single extends Multiplicity
+    sealed trait Multiple extends Multiplicity
 
-//  type TieToSingle[P <: Peer] = { type Tie <: Multiplicity.Single[P] }
-
-//  type TieToMultiple[P <: Peer] = { type Tie <: Multiplicity.Multiple[P] }
-
-  sealed trait TieToMultiple[P <: Peer]:
-    type Tie <: Multiplicity.Multiple[P]
-
-  type TieTo[P <: Peer] = { type Tie <: Multiplicity[P] }
-
-  enum Multiplicity[+P <: Peer]:
-    case Single()
-    case Multiple()
+  trait Peer
+  sealed trait TieToSingle[P <: Peer] extends Peer
+  sealed trait TieToMultiple[P <: Peer] extends Peer
+  type TieTo[P <: Peer] = TieToSingle[P] | TieToMultiple[P]

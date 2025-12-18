@@ -1,11 +1,11 @@
 package it.unibo.pslab
 
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.peers.Peers.Multiplicity.*
+import it.unibo.pslab.peers.Peers.TieToSingle
 
 object Multiparty:
-  type Pinger <: { type Tie <: Single[Ponger] }
-  type Ponger <: { type Tie <: Single[Pinger] }
+  type Pinger <: TieToSingle[Ponger]
+  type Ponger <: TieToSingle[Pinger]
 
   def pingPongProgram: MultiParty[Unit] = for
     initial <- placed[Int, Pinger](0)

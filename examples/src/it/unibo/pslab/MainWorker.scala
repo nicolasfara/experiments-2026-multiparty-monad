@@ -1,11 +1,11 @@
 package it.unibo.pslab
 
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.peers.Peers.Multiplicity.*
+import it.unibo.pslab.peers.Peers.{TieToMultiple, TieToSingle}
 
 object MainWorker:
-  type Main <: { type Tie <: Multiple[Worker] }
-  type Worker <: { type Tie <: Single[Main] }
+  type Main <: TieToMultiple[Worker]
+  type Worker <: TieToSingle[Main]
 
   private case class Task(x: Int):
     def compute: Int = x * x

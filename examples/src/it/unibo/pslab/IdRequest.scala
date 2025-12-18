@@ -2,7 +2,6 @@ package it.unibo.pslab
 
 import cats.syntax.all.*
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.peers.Peers.Multiplicity.*
 import it.unibo.pslab.peers.Peers.{TieToMultiple, TieToSingle}
 
 import java.util.UUID
