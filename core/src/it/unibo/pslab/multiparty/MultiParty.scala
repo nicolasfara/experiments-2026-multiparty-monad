@@ -1,7 +1,7 @@
 package it.unibo.pslab.multiparty
 
 import cats.free.Free
-import it.unibo.pslab.peers.Peers.{Peer, TieToMultiple, TieToSingle}
+import it.unibo.pslab.peers.Peers.{Peer, TieTo, TieToMultiple, TieToSingle}
 
 import scala.annotation.nowarn
 
@@ -22,24 +22,28 @@ object MultiParty:
 
   trait Remote[-P <: Peer]
 
+  type PlacedKind[From <: Peer, To <: Peer, V] = To match
+    case TieToSingle[From]   => V on To
+    case TieToMultiple[From] => Many[V] on To
+
   enum MultiPartyGrammar[T]:
     case Placed[V, P <: Peer](value: PeerScope[P] => MultiParty[V] | V) extends MultiPartyGrammar[V on P]
-    case Par[A, PA <: Peer, B, PB <: Peer](left: PeerScope[PA] => MultiParty[A], right: PeerScope[PB] => MultiParty[B])
-        extends MultiPartyGrammar[(A on PA, B on PB)]
-    case Unicast[V, From <: TieToSingle[To], To <: TieToSingle[From]](value: V on From)
-        extends MultiPartyGrammar[V on To]
-    case Isotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: V on From)
-        extends MultiPartyGrammar[V on To]
+//    case Par[A, PA <: Peer, B, PB <: Peer](left: PeerScope[PA] => MultiParty[A], right: PeerScope[PB] => MultiParty[B])
+//        extends MultiPartyGrammar[(A on PA, B on PB)]
+//    case Unicast[V, From <: TieToSingle[To], To <: TieToSingle[From]](value: V on From)
+//        extends MultiPartyGrammar[V on To]
+//    case Isotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: V on From)
+//        extends MultiPartyGrammar[V on To]
     case Anisotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: Aniso[V] on From)
         extends MultiPartyGrammar[V on To]
-    case Funnel[V, From <: TieToSingle[To], To <: TieToMultiple[From]](value: V on From)
-        extends MultiPartyGrammar[Many[V] on To]
-    case Await[V, P <: Peer: PeerScope](placed: (V | Many[V]) on P) extends MultiPartyGrammar[V]
+//    case Funnel[V, From <: TieToSingle[To], To <: TieToMultiple[From]](value: V on From)
+//        extends MultiPartyGrammar[Many[V] on To]
+    case Comm[V, From <: TieTo[To], To <: TieTo[From]](value: V on From)
+        extends MultiPartyGrammar[PlacedKind[From, To, V]]
+    case Await[V, P <: Peer: PeerScope](placed: V on P) extends MultiPartyGrammar[V]
     case AwaitAll[V, P <: Peer: PeerScope](placed: Many[V] on P) extends MultiPartyGrammar[Map[Remote[?], V]]
-    case AnisotropicProvider[V, From <: TieToMultiple[To], To <: Peer](
-        value: PartialFunction[Remote[To], V],
-        default: V
-    ) extends MultiPartyGrammar[Aniso[V]]
+    case AnisotropicProvider[V, From <: TieToMultiple[To], To <: Peer](value: PartialFunction[Remote[To], V])
+        extends MultiPartyGrammar[Aniso[V]]
     case Remotes[P <: Peer]() extends MultiPartyGrammar[Iterable[Remote[P]]]
 
   type MultiParty[T] = Free[MultiPartyGrammar, T]
@@ -49,25 +53,30 @@ object MultiParty:
     given ps: PeerScope[P] = new PeerScope[P] {}
     Free.liftF(MultiPartyGrammar.Placed[V, P](_ => body))
 
-  @nowarn
-  inline def par[A, PA <: Peer, B, PB <: Peer](
-      inline left: PeerScope[PA] ?=> MultiParty[A],
-      inline right: PeerScope[PB] ?=> MultiParty[B]
-  ): MultiParty[(A on PA, B on PB)] =
-    given lps: PeerScope[PA] = new PeerScope[PA] {}
-    given rps: PeerScope[PB] = new PeerScope[PB] {}
-    Free.liftF(MultiPartyGrammar.Par[A, PA, B, PB](_ => left, _ => right))
-
-  inline def unicast[V, From <: TieToSingle[To], To <: TieToSingle[From]](
+  inline def comm[V, From <: TieTo[To], To <: TieTo[From]](
       inline value: V on From
-  ): MultiParty[V on To] =
-    Free.liftF(MultiPartyGrammar.Unicast[V, From, To](value))
+  ): MultiParty[PlacedKind[From, To, V]] =
+    Free.liftF(MultiPartyGrammar.Comm[V, From, To](value))
 
-  inline def isotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
-      inline value: V on From
-  ): MultiParty[V on To] =
-    Free.liftF(MultiPartyGrammar.Isotropic[V, From, To](value))
+//  @nowarn
+//  inline def par[A, PA <: Peer, B, PB <: Peer](
+//      inline left: PeerScope[PA] ?=> MultiParty[A],
+//      inline right: PeerScope[PB] ?=> MultiParty[B]
+//  ): MultiParty[(A on PA, B on PB)] =
+//    given lps: PeerScope[PA] = new PeerScope[PA] {}
+//    given rps: PeerScope[PB] = new PeerScope[PB] {}
+//    Free.liftF(MultiPartyGrammar.Par[A, PA, B, PB](_ => left, _ => right))
 
+//  inline def unicast[V, From <: TieToSingle[To], To <: TieToSingle[From]](
+//      inline value: V on From
+//  ): MultiParty[V on To] =
+//    Free.liftF(MultiPartyGrammar.Unicast[V, From, To](value))
+//
+//  inline def isotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
+//      inline value: V on From
+//  ): MultiParty[V on To] =
+//    Free.liftF(MultiPartyGrammar.Isotropic[V, From, To](value))
+//
   inline def anisotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
       inline value: Aniso[V] on From
   ): MultiParty[V on To] =
@@ -75,15 +84,15 @@ object MultiParty:
 
   inline def anisotropicProvider[V, From <: TieToMultiple[To], To <: Peer](
       inline value: PartialFunction[Remote[To], V]
-  )(default: V): MultiParty[Aniso[V]] =
-    Free.liftF(MultiPartyGrammar.AnisotropicProvider[V, From, To](value, default))
+  ): MultiParty[Aniso[V]] =
+    Free.liftF(MultiPartyGrammar.AnisotropicProvider[V, From, To](value))
+//
+//  inline def funnel[V, From <: TieToSingle[To], To <: TieToMultiple[From]](
+//      inline value: V on From
+//  ): MultiParty[Many[V] on To] =
+//    Free.liftF(MultiPartyGrammar.Funnel[V, From, To](value))
 
-  inline def funnel[V, From <: TieToSingle[To], To <: TieToMultiple[From]](
-      inline value: V on From
-  ): MultiParty[Many[V] on To] =
-    Free.liftF(MultiPartyGrammar.Funnel[V, From, To](value))
-
-  inline def await[V, P <: Peer: PeerScope](inline placed: (V | Many[V]) on P): MultiParty[V] =
+  inline def await[V, P <: Peer: PeerScope](inline placed: V on P): MultiParty[V] =
     Free.liftF(MultiPartyGrammar.Await[V, P](placed))
 
   inline def awaitAll[V, P <: Peer: PeerScope](inline placed: Many[V] on P): MultiParty[Map[Remote[?], V]] =

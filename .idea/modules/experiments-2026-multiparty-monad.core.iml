@@ -4,7 +4,7 @@
     <output url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/core/bspBuildTargetCompileMerged.dest" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/core/compileGeneratedSources.dest">
-      <sourceFolder url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/core/compileGeneratedSources.dest" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/core/compileGeneratedSources.dest" isTestSource="false" generated="true" />
     </content>
     <content url="file://$MODULE_DIR$/../../core">
       <sourceFolder url="file://$MODULE_DIR$/../../core/src" isTestSource="false" />

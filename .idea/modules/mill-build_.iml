@@ -4,10 +4,10 @@
     <output url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/bspBuildTargetCompileMerged.dest" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/compileGeneratedSources.dest">
-      <sourceFolder url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/compileGeneratedSources.dest" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/compileGeneratedSources.dest" isTestSource="false" generated="true" />
     </content>
     <content url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/support">
-      <sourceFolder url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/support" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../../.bsp/mill-bsp-out/mill-build/generatedScriptSources.dest/support" isTestSource="false" generated="true" />
     </content>
     <content url="file://$MODULE_DIR$/../../build.mill">
       <sourceFolder url="file://$MODULE_DIR$/../../build.mill" isTestSource="false" />
