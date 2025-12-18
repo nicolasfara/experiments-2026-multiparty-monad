@@ -30,9 +30,9 @@ object MultiParty:
         extends MultiPartyGrammar[(A on PA, B on PB)]
     case Unicast[V, From <: TieToSingle[To], To <: TieToSingle[From]](value: V on From)
         extends MultiPartyGrammar[V on To]
-    case Multicast[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: V on From)
+    case Isotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: V on From)
         extends MultiPartyGrammar[V on To]
-    case SelectiveMulticast[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: Selected[V] on From)
+    case Anisotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: Selected[V] on From)
         extends MultiPartyGrammar[V on To]
     case Funnel[V, From <: TieToSingle[To], To <: TieToMultiple[From]](value: V on From)
         extends MultiPartyGrammar[Many[V] on To]
@@ -62,15 +62,15 @@ object MultiParty:
   ): MultiParty[V on To] =
     Free.liftF(MultiPartyGrammar.Unicast[V, From, To](value))
 
-  inline def multicast[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
+  inline def isotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
       inline value: V on From
   ): MultiParty[V on To] =
-    Free.liftF(MultiPartyGrammar.Multicast[V, From, To](value))
+    Free.liftF(MultiPartyGrammar.Isotropic[V, From, To](value))
 
-  inline def selectiveMulticast[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
+  inline def anisotropic[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
       inline value: Selected[V] on From
   ): MultiParty[V on To] =
-    Free.liftF(MultiPartyGrammar.SelectiveMulticast[V, From, To](value))
+    Free.liftF(MultiPartyGrammar.Anisotropic[V, From, To](value))
 
   inline def selectProviders[V, From <: TieToMultiple[To], To <: Peer](
       inline value: Map[Remote[To], V]

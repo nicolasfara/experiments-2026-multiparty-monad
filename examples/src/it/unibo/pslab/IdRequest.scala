@@ -17,7 +17,7 @@ object IdRequest:
         requests <- awaitAll(cidOnProvider)
         assigned <- selectProviders[Int, IdProvider, IdRequester](Map.empty)
       yield assigned
-    assignedIdOnRequester <- selectiveMulticast[Int, IdProvider, IdRequester](assignedId)
+    assignedIdOnRequester <- anisotropic[Int, IdProvider, IdRequester](assignedId)
     _ <- placed[Unit, IdRequester]:
       for id <- await(assignedIdOnRequester)
       yield println(s"IdRequester received assigned ID: $id")
