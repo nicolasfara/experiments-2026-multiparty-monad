@@ -8,18 +8,18 @@ object TrianglePingPong:
   type Bob <: TieToSingle[Alice] & TieToSingle[Andromeda]
   type Andromeda <: TieToSingle[Bob] & TieToSingle[Alice]
   def pingPongProgram: MultiParty[Unit] = for
-    initial <- placed[Int, Alice](0)
+    initial <- placed[Alice](0)
     _ <- pingPong(initial)
   yield ()
 
   def pingPong(initial: Int on Alice): MultiParty[Unit] = for
-    aliceSendToBob <- comm[Int, Alice, Bob](initial)
-    prepareMessageToAndromeda <- placed[Int, Bob]:
+    aliceSendToBob <- comm[Alice, Bob](initial)
+    prepareMessageToAndromeda <- placed[Bob]:
       await(aliceSendToBob).map(_ + 1)
-    bobSendToAndromeda <- comm[Int, Bob, Andromeda](prepareMessageToAndromeda)
-    prepareMessageToAlice <- placed[Int, Andromeda]:
+    bobSendToAndromeda <- comm[Bob, Andromeda](prepareMessageToAndromeda)
+    prepareMessageToAlice <- placed[Andromeda]:
       await(bobSendToAndromeda).map(_ + 1)
-    pingerSum <- comm[Int, Andromeda, Alice](prepareMessageToAlice)
+    pingerSum <- comm[Andromeda, Alice](prepareMessageToAlice)
   yield pingPong(pingerSum)
 
 @main

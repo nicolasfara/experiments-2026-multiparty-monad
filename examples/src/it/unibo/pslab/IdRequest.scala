@@ -13,15 +13,15 @@ object IdRequest:
 
   private def assignTask(requests: Map[Remote[?], UUID]): MultiParty[PerPeer[Int]] =
     val assignments = requests.map
-    forEachPeer[Int, IdProvider, IdRequester](requests.map(_._1 -> Random.nextInt()))
+    forEachPeer[IdProvider, IdRequester](requests.map(_._1 -> Random.nextInt()))
 
   def idRequestProgram: MultiParty[Unit] = for
-    cid <- placed[UUID, IdRequester](UUID.randomUUID())
-    cidOnProvider <- comm[UUID, IdRequester, IdProvider](cid)
-    assignedId <- placed[PerPeer[Int], IdProvider]:
+    cid <- placed[IdRequester](UUID.randomUUID())
+    cidOnProvider <- comm[IdRequester, IdProvider](cid)
+    assignedId <- placed[IdProvider]:
       awaitAll(cidOnProvider) >>= assignTask
-    assignedIdOnRequester <- commPerPeer[Int, IdProvider, IdRequester](assignedId)
-    _ <- placed[Unit, IdRequester]:
+    assignedIdOnRequester <- commPerPeer[IdProvider, IdRequester](assignedId)
+    _ <- placed[IdRequester]:
       for id <- await(assignedIdOnRequester)
       yield println(s"IdRequester received assigned ID: $id")
   yield ()

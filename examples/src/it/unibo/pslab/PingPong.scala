@@ -8,15 +8,15 @@ object Multiparty:
   type Ponger <: TieToSingle[Pinger]
 
   def pingPongProgram: MultiParty[Unit] = for
-    initial <- placed[Int, Pinger](0)
+    initial <- placed[Pinger](0)
     _ <- pingPong(initial)
   yield ()
 
   def pingPong(initial: Int on Pinger): MultiParty[Unit] = for
-    onPonger <- comm[Int, Pinger, Ponger](initial)
-    newCounter <- placed[Int, Ponger]:
+    onPonger <- comm[Pinger, Ponger](initial)
+    newCounter <- placed[Ponger]:
       await(onPonger).map(_ + 1)
-    newCounterOnPinger <- comm[Int, Ponger, Pinger](newCounter)
+    newCounterOnPinger <- comm[Ponger, Pinger](newCounter)
   yield pingPong(newCounterOnPinger)
 
 @main

@@ -24,7 +24,7 @@ object MultiParty:
 
   enum MultiPartyGrammar[T]:
     case Placed[V, P <: Peer](value: PeerScope[P] => MultiParty[V] | V) extends MultiPartyGrammar[V on P]
-    case SendPerPeer[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: PerPeer[V] on From)
+    case CommPerPeer[V, From <: TieToMultiple[To], To <: TieToSingle[From]](value: PerPeer[V] on From)
         extends MultiPartyGrammar[V on To]
     case Comm[V, From <: TieTo[To], To <: TieTo[From]](value: V on From)
         extends MultiPartyGrammar[PlacedKind[From, To, V]]
@@ -32,35 +32,49 @@ object MultiParty:
     case AwaitAll[V, P <: Peer: PeerScope](placed: Many[V] on P) extends MultiPartyGrammar[Map[Remote[?], V]]
     case ForEachPeer[V, From <: TieToMultiple[To], To <: Peer](value: PartialFunction[Remote[To], V])
         extends MultiPartyGrammar[PerPeer[V]]
-    case Remotes[P <: Peer]() extends MultiPartyGrammar[Iterable[Remote[P]]]
+    case Remotes[RP <: Peer, L <: Peer: PeerScope]() extends MultiPartyGrammar[Iterable[Remote[RP]]]
 
   type MultiParty[T] = Free[MultiPartyGrammar, T]
 
+  trait PlacedContinuation[P <: Peer]:
+    def apply[V](body: PeerScope[P] ?=> MultiParty[V] | V): MultiParty[V on P] =
+      given ps: PeerScope[P] = new PeerScope[P] {}
+      Free.liftF(MultiPartyGrammar.Placed[V, P](_ => body))
   @nowarn
-  inline def placed[V, P <: Peer](inline body: PeerScope[P] ?=> MultiParty[V] | V): MultiParty[V on P] =
-    given ps: PeerScope[P] = new PeerScope[P] {}
-    Free.liftF(MultiPartyGrammar.Placed[V, P](_ => body))
+  inline def placed[P <: Peer]: PlacedContinuation[P] = new PlacedContinuation[P] {}
 
-  inline def comm[V, From <: TieTo[To], To <: TieTo[From]](
-      inline value: V on From
-  ): MultiParty[PlacedKind[From, To, V]] =
-    Free.liftF(MultiPartyGrammar.Comm[V, From, To](value))
+  trait CommContinuation[From <: TieTo[To], To <: TieTo[From]]:
+    def apply[V](value: V on From): MultiParty[PlacedKind[From, To, V]] =
+      Free.liftF(MultiPartyGrammar.Comm[V, From, To](value))
+  @nowarn
+  inline def comm[From <: TieTo[To], To <: TieTo[From]]: CommContinuation[From, To] = new CommContinuation[From, To] {}
 
-  inline def commPerPeer[V, From <: TieToMultiple[To], To <: TieToSingle[From]](
-      inline value: PerPeer[V] on From
-  ): MultiParty[V on To] =
-    Free.liftF(MultiPartyGrammar.SendPerPeer[V, From, To](value))
+  trait CommPerPeerContinuation[From <: TieToMultiple[To], To <: TieToSingle[From]]:
+    def apply[V](value: PerPeer[V] on From): MultiParty[V on To] =
+      Free.liftF(MultiPartyGrammar.CommPerPeer[V, From, To](value))
 
-  inline def forEachPeer[V, From <: TieToMultiple[To], To <: Peer](
-      inline value: PartialFunction[Remote[To], V]
-  ): MultiParty[PerPeer[V]] =
-    Free.liftF(MultiPartyGrammar.ForEachPeer[V, From, To](value))
+  @nowarn
+  inline def commPerPeer[From <: TieToMultiple[To], To <: TieToSingle[From]]: CommPerPeerContinuation[From, To] =
+    new CommPerPeerContinuation[From, To] {}
 
-  inline def await[V, P <: Peer: PeerScope](inline placed: V on P): MultiParty[V] =
-    Free.liftF(MultiPartyGrammar.Await[V, P](placed))
+  trait ForEachPeerContinuation[From <: TieToMultiple[To], To <: Peer]:
+    def apply[V](value: PartialFunction[Remote[To], V]): MultiParty[PerPeer[V]] =
+      Free.liftF(MultiPartyGrammar.ForEachPeer[V, From, To](value))
+  @nowarn
+  inline def forEachPeer[From <: TieToMultiple[To], To <: Peer]: ForEachPeerContinuation[From, To] =
+    new ForEachPeerContinuation[From, To] {}
 
-  inline def awaitAll[V, P <: Peer: PeerScope](inline placed: Many[V] on P): MultiParty[Map[Remote[?], V]] =
-    Free.liftF(MultiPartyGrammar.AwaitAll[V, P](placed))
+  trait AwaitContinuation[P <: Peer]:
+    def apply[V](placed: V on P)(using PeerScope[P]): MultiParty[V] =
+      Free.liftF(MultiPartyGrammar.Await[V, P](placed))
+  @nowarn
+  inline def await[V, P <: Peer: PeerScope]: AwaitContinuation[P] = new AwaitContinuation[P] {}
 
-  inline def remotes[P <: Peer](): MultiParty[Iterable[Remote[P]]] =
-    Free.liftF(MultiPartyGrammar.Remotes[P]())
+  trait AwaitAllContinuation[P <: Peer]:
+    def apply[V](placed: Many[V] on P)(using PeerScope[P]): MultiParty[Map[Remote[?], V]] =
+      Free.liftF(MultiPartyGrammar.AwaitAll[V, P](placed))
+  @nowarn
+  inline def awaitAll[P <: Peer: PeerScope]: AwaitAllContinuation[P] = new AwaitAllContinuation[P] {}
+
+  inline def remotes[RP <: Peer]()[L <: Peer](using PeerScope[L]): MultiParty[Iterable[Remote[RP]]] =
+    Free.liftF(MultiPartyGrammar.Remotes[RP, L]())

@@ -11,14 +11,14 @@ object MainWorker:
     def compute: Int = x * x
 
   def mainWorkerProgram: MultiParty[Unit] = for
-    task <- placed[PerPeer[Task], Main]:
+    task <- placed[Main]:
       for
         peers <- remotes[Worker]()
         allocation = peers.map(_ -> Task(scala.util.Random.nextInt(100))).toMap
-        message <- forEachPeer[Task, Main, Worker](allocation)
+        message <- forEachPeer[Main, Worker](allocation)
       yield message
-    taskOnWorker <- commPerPeer[Task, Main, Worker](task)
-    _ <- placed[Unit, Worker]:
+    taskOnWorker <- commPerPeer[Main, Worker](task)
+    _ <- placed[Worker]:
       for t <- await(taskOnWorker)
       yield println(s"Worker received task with input ${t.x}, computed result: ${t.compute}")
   yield ()
