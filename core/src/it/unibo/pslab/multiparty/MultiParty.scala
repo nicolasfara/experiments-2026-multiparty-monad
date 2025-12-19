@@ -1,7 +1,8 @@
 package it.unibo.pslab.multiparty
 
 import cats.free.Free
-import it.unibo.pslab.peers.Peers.{Peer, TieTo, TieToMultiple, TieToSingle}
+import it.unibo.pslab.peers.Peers.{Peer, TieTo}
+import it.unibo.pslab.peers.Peers.TieTo.*
 
 import scala.annotation.nowarn
 

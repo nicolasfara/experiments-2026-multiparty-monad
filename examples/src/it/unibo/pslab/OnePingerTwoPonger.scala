@@ -1,7 +1,7 @@
 package it.unibo.pslab
 
 import it.unibo.pslab.multiparty.MultiParty.{MultiParty, await, comm, on, placed}
-import it.unibo.pslab.peers.Peers.TieToSingle
+import it.unibo.pslab.peers.Peers.TieTo.TieToSingle
 
 object TrianglePingPong:
   type Alice <: TieToSingle[Bob] & TieToSingle[Andromeda]

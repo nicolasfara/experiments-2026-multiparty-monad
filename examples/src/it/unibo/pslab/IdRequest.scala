@@ -2,7 +2,7 @@ package it.unibo.pslab
 
 import cats.syntax.all.*
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.peers.Peers.{TieToMultiple, TieToSingle}
+import it.unibo.pslab.peers.Peers.TieTo.*
 
 import java.util.UUID
 import scala.util.Random

@@ -1,7 +1,7 @@
 package it.unibo.pslab
 
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.peers.Peers.TieToSingle
+import it.unibo.pslab.peers.Peers.TieTo.TieToSingle
 
 object Multiparty:
   type Pinger <: TieToSingle[Ponger]

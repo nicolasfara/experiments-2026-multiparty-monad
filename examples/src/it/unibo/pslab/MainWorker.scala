@@ -1,7 +1,7 @@
 package it.unibo.pslab
 
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.peers.Peers.{TieToMultiple, TieToSingle}
+import it.unibo.pslab.peers.Peers.TieTo.*
 
 object MainWorker:
   type Main <: TieToMultiple[Worker]
