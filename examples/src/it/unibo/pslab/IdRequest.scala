@@ -1,6 +1,5 @@
 package it.unibo.pslab
 
-import cats.syntax.all.*
 import it.unibo.pslab.multiparty.MultiParty.*
 import it.unibo.pslab.peers.Peers.TieTo.*
 
@@ -19,7 +18,10 @@ object IdRequest:
     cid <- placed[IdRequester](UUID.randomUUID())
     cidOnProvider <- comm[IdRequester, IdProvider](cid)
     assignedId <- placed[IdProvider]:
-      awaitAll(cidOnProvider) >>= assignTask
+      for
+        cidMap <- awaitAll(cidOnProvider)
+        tasks <- assignTask(cidMap)
+      yield tasks
     assignedIdOnRequester <- commPerPeer[IdProvider, IdRequester](assignedId)
     _ <- placed[IdRequester]:
       for id <- await(assignedIdOnRequester)
