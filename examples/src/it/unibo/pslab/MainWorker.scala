@@ -2,6 +2,7 @@ package it.unibo.pslab
 
 import it.unibo.pslab.multiparty.MultiParty.*
 import it.unibo.pslab.peers.Peers.TieTo.*
+import it.unibo.pslab.multiparty.Language.*
 
 object MainWorker:
   type Main <: TieToMultiple[Worker]
@@ -10,15 +11,15 @@ object MainWorker:
   private case class Task(x: Int):
     def compute: Int = x * x
 
-  def mainWorkerProgram: MultiParty[Unit] = for
-    task <- placed[Main]:
+  def mainWorkerProgram(using LocalPeer): MultiParty[Unit] = for
+    task <- on[Main]:
       for
-        peers <- remotes[Worker]()
+        peers <- remotes[Worker]
         allocation = peers.map(_ -> Task(scala.util.Random.nextInt(100))).toMap
         message <- forEachPeer[Main, Worker](allocation)
       yield message
     taskOnWorker <- commPerPeer[Main, Worker](task)
-    _ <- placed[Worker]:
-      for t <- await(taskOnWorker)
+    _ <- on[Worker]:
+      for t <- asLocal(taskOnWorker)
       yield println(s"Worker received task with input ${t.x}, computed result: ${t.compute}")
   yield ()

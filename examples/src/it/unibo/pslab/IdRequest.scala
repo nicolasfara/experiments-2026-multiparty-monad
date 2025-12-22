@@ -5,25 +5,26 @@ import it.unibo.pslab.peers.Peers.TieTo.*
 
 import java.util.UUID
 import scala.util.Random
+import it.unibo.pslab.multiparty.Language.*
 
 object IdRequest:
   type IdProvider <: TieToMultiple[IdRequester]
   type IdRequester <: TieToSingle[IdProvider]
 
-  private def assignTask(requests: Map[Remote[?], UUID]): MultiParty[PerPeer[Int]] =
+  private def assignTask(requests: Map[Remote[?], UUID])(using LocalPeer): MultiParty[PerPeer[Int]] =
     val assignments = requests.map
     forEachPeer[IdProvider, IdRequester](requests.map(_._1 -> Random.nextInt()))
 
-  def idRequestProgram: MultiParty[Unit] = for
-    cid <- placed[IdRequester](UUID.randomUUID())
+  def idRequestProgram(using LocalPeer): MultiParty[Unit] = for
+    cid <- on[IdRequester](UUID.randomUUID())
     cidOnProvider <- comm[IdRequester, IdProvider](cid)
-    assignedId <- placed[IdProvider]:
+    assignedId <- on[IdProvider]:
       for
-        cidMap <- awaitAll(cidOnProvider)
+        cidMap <- asLocalAll(cidOnProvider)
         tasks <- assignTask(cidMap)
       yield tasks
     assignedIdOnRequester <- commPerPeer[IdProvider, IdRequester](assignedId)
-    _ <- placed[IdRequester]:
-      for id <- await(assignedIdOnRequester)
+    _ <- on[IdRequester]:
+      for id <- asLocal(assignedIdOnRequester)
       yield println(s"IdRequester received assigned ID: $id")
   yield ()
