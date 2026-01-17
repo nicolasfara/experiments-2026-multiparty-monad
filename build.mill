@@ -37,6 +37,7 @@ trait CommonScala extends ScalaModule with ScalafixModule {
   def mvnDeps = Seq(
     mvn"org.typelevel::cats-core:2.13.0",
     mvn"org.typelevel::cats-free:2.13.0",
+    mvn"org.typelevel::cats-effect:3.6.3"
   )
 }
 
