@@ -18,8 +18,20 @@ object Peers:
     val fqn = tpe.typeSymbol.fullName
     '{ PeerTagImpl[P](${ Expr(fqn) }) }
 
-  sealed trait Peer
+  enum Quantifier[-P <: Peer]:
+    case Single()
+    case Multiple()
 
-  enum TieTo[P <: Peer] extends Peer:
-    case TieToSingle[K <: Peer]() extends TieTo[K]
-    case TieToMultiple[K <: Peer]() extends TieTo[K]
+  type Peer = { type Tie }
+
+  type TieSingle[P <: Peer] = { type Tie <: Quantifier.Single[P] }
+
+  type TieMultiple[P <: Peer] = { type Tie <: Quantifier.Multiple[P] }
+
+  type TieTo[P <: Peer] = { type TieTo <: Quantifier[P] }
+
+  // sealed trait Peer
+
+  // enum TieTo[P <: Peer] extends Peer:
+  //   case TieToSingle[K <: Peer]() extends TieTo[K]
+  //   case TieToMultiple[K <: Peer]() extends TieTo[K]
