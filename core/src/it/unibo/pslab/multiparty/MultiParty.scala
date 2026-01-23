@@ -8,7 +8,6 @@ import it.unibo.pslab.peers.Peers.PeerTag
 import it.unibo.pslab.multiparty.Environment.Reference
 import MultiParty.on
 import cats.Monad
-import cats.Applicative
 
 trait Label[+V]
 
@@ -74,7 +73,7 @@ object MultiParty:
           value <- network.receive(res, sender)
         yield Placement.Local[V, To](res, value)
       else
-        Applicative[F].pure(Placement.Remote[V, To](value.res))
+        Placement.Remote[V, To](value.res).pure[F]
 
     def isotropicComm[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
         from: PeerTag[From],
@@ -92,7 +91,7 @@ object MultiParty:
           value <- senders.toList.traverse(network.receive[V, From](res, _)).map(_.head)
         yield Placement.Local[V, To](res, value)
       else
-        Applicative[F].pure(Placement.Remote[V, To](value.res))
+        Placement.Remote[V, To](value.res).pure[F]
 
     def anisotropicComm[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
         from: PeerTag[From],
@@ -113,7 +112,7 @@ object MultiParty:
           value <- senders.toList.traverse(network.receive[V, From](res, _)).map(_.head)
         yield Placement.Local[V, To](res, value)
       else
-        Applicative[F].pure(Placement.Remote[V, To](value.res))
+        Placement.Remote[V, To](value.res).pure[F]
 
     def anisotropicMessage[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
       from: PeerTag[From],
@@ -143,4 +142,4 @@ object MultiParty:
 
     def take[Local <: Peer](using Label[Local])[V](placed: V on Local): F[V] =
       val Placement.Local(res, v) = placed.runtimeChecked
-      Applicative[F].pure(v)
+      v.pure[F]
