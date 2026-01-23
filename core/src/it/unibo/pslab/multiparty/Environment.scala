@@ -1,7 +1,7 @@
 package it.unibo.pslab.multiparty
 
 import it.unibo.pslab.peers.Peers.PeerTag
-import it.unibo.pslab.multiparty.Environment.Resource
+import it.unibo.pslab.multiparty.Environment.Reference
 import cats.Monad
 
 // trait Counter[F[_]]:
@@ -14,15 +14,15 @@ import cats.Monad
 //     }
 
 trait Environment[F[_]]:
-  def provide(peerTag: PeerTag[?]): F[Resource]
+  def provide(peerTag: PeerTag[?]): F[Reference]
 
 object Environment:
-  trait Resource
+  trait Reference
 
-  private case class ResourceImpl(id: Int, peerTag: PeerTag[?]) extends Resource
+  private case class ResourceImpl(id: Int, peerTag: PeerTag[?]) extends Reference
 
   def make[F[_]: Monad]: Environment[F] = new Environment[F]:
     private var counter = 0
-    def provide(peerTag: PeerTag[?]): F[Resource] = Monad[F].pure:
+    def provide(peerTag: PeerTag[?]): F[Reference] = Monad[F].pure:
       counter += 1
       ResourceImpl(counter, peerTag)

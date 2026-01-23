@@ -9,7 +9,7 @@ import com.goyeau.mill.scalafix.ScalafixModule
 import mill.api.Task.Simple
 
 trait CommonScala extends ScalaModule with ScalafixModule {
-  def scalaVersion = "3.7.4"
+  def scalaVersion = "3.8.1"
   //  def scoverageVersion = "2.1.0"
 
   // def jvmId = "temurin:23.0.1"

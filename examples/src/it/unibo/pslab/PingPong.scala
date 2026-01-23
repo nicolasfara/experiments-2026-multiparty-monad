@@ -20,12 +20,12 @@ object Multiparty:
   type Pinger <: { type Tie <: Single[Ponger] }
   type Ponger <: { type Tie <: Single[Pinger] }
 
-  def pingPongProgram[F[_]: Monad: Console](using lang: MultiParty[F]): F[Unit] = for
+  def pingPongProgram[F[_]: {Monad, Console}](using lang: MultiParty[F]): F[Unit] = for
     initial <- on[Pinger](0.pure)
     _ <- pingPong(initial)
   yield ()
 
-  def pingPong[F[_]: Monad: Console](using lang: MultiParty[F])(initial: Int on Pinger): F[Unit] = for
+  def pingPong[F[_]: {Monad, Console}](using lang: MultiParty[F])(initial: Int on Pinger): F[Unit] = for
     onPonger <- comm[Pinger, Ponger](initial)
     _ <- Console[F].println(s"Pinger sent value to Ponger")
     newCounter <- on[Ponger]:
@@ -48,7 +48,7 @@ object Multiparty:
 object PingPongIOApp extends IOApp.Simple:
   override def run: IO[Unit] =
     val env = Environment.make[IO]
-    val network: Network[IO] = InMemoryNetwork.make[IO]
-    val lang = MultiParty.project[IO, Multiparty.Pinger](env, network)
+    val network: Network[IO, Multiparty.Pinger] = InMemoryNetwork.make[IO, Multiparty.Pinger]
+    val lang = MultiParty.make[IO, Multiparty.Pinger](env, network)
     val program = Multiparty.pingPongProgram[IO](using summon[Monad[IO]], summon[Console[IO]], lang)
     program
