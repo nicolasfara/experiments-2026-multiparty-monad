@@ -1,6 +1,3 @@
-# Created by https://www.toptal.com/developers/gitignore/api/mill,scala,intellij
-# Edit at https://www.toptal.com/developers/gitignore?templates=mill,scala,intellij
-
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
@@ -39,5 +36,5 @@ hs_err_pid*
 
 .metals/
 
-# End of https://www.toptal.com/developers/gitignore/api/mill,scala,intellij
-
+# macOS files
+.DS_Store
