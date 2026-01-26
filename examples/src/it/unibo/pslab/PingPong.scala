@@ -1,21 +1,21 @@
 package it.unibo.pslab
 
-import cats.syntax.all.*
-import cats.effect.std.Console
+import scala.concurrent.duration.DurationInt
+
+import it.unibo.pslab.PingPong.*
+import it.unibo.pslab.UpickleCodable.given
+import it.unibo.pslab.multiparty.{ Environment, MultiParty }
+import it.unibo.pslab.multiparty.MultiParty.*
+import it.unibo.pslab.network.Codable
+import it.unibo.pslab.network.mqtt.MqttNetwork
 import it.unibo.pslab.peers.Peers.*
 import it.unibo.pslab.peers.Peers.Quantifier.*
+
 import cats.Monad
-import it.unibo.pslab.multiparty.MultiParty
-import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.multiparty.Environment
-// import cats.Id
-import cats.effect.IOApp
-import cats.effect.IO
-import it.unibo.pslab.network.mqtt.MqttNetwork
+import cats.effect.{ IO, IOApp }
 import cats.effect.kernel.Temporal
-import scala.concurrent.duration.DurationInt
-import it.unibo.pslab.network.Codable
-import it.unibo.pslab.PingPong.*
+import cats.effect.std.Console
+import cats.syntax.all.*
 
 object PingPong:
   type Pinger <: { type Tie <: Single[Ponger] }
@@ -57,10 +57,6 @@ object PingPong:
 //   val lang = MultiParty.project[Id, Multiparty.Pinger](env, network)
 //   val program = Multiparty.pingPongProgram[Id](using summon[Monad[Id]], summon[Console[Id]], lang)
 //   program
-
-given Codable[IO, Int, Array[Byte]] = new Codable[IO, Int, Array[Byte]]:
-  override def encode(value: Int): IO[Array[Byte]] = IO.pure(value.toString.getBytes)
-  override def decode(data: Array[Byte]): IO[Int] = IO.pure(new String(data).toInt)
 
 object Pinger extends IOApp.Simple:
   override def run: IO[Unit] = MqttNetwork
