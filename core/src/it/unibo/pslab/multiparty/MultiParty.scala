@@ -8,6 +8,7 @@ import cats.Monad
 import cats.syntax.all.*
 
 import MultiParty.on
+import cats.data.NonEmptyList
 
 trait Label[+V]
 
@@ -39,7 +40,7 @@ trait MultiParty[F[_]]:
 
   def on[Local <: Peer](using PeerTag[Local])[V](body: Label[Local] ?=> F[V]): F[V on Local]
 
-  def reachablePeers[RP <: Peer](using PeerTag[RP])[L <: Peer: Label]: F[Iterable[Remote[RP]]]
+  def reachablePeers[RP <: Peer](using PeerTag[RP])[L <: Peer: Label]: F[NonEmptyList[Remote[RP]]]
 
   def take[Local <: Peer](using Label[Local])[V](placed: V on Local): F[V]
 
@@ -112,14 +113,14 @@ object MultiParty:
       if runtimePeer == from then
         val Placement.Local(res, v) = value.runtimeChecked
         for
-          receiver <- network.alivePeersOf[To].map(_.headOption)
-          _ <- receiver.map(network.send(v, res, _)).getOrElse(().pure[F])
+          receiver <- network.alivePeersOf[To].map(_.head)
+          _ <- network.send(v, res, receiver)
         yield Placement.Remote[V, To](res)
       else if runtimePeer == to then
         val Placement.Remote(res) = value.runtimeChecked
         for
-          sender <- network.alivePeersOf[From].map(_.headOption)
-          value <- sender.map(network.receive(res, _)).getOrElse(null.asInstanceOf[V].pure[F])
+          sender <- network.alivePeersOf[From].map(_.head)
+          value <- network.receive(res, sender)
         yield Placement.Local[V, To](res, value)
       else Placement.Remote[V, To](value.res).pure[F]
 
@@ -176,7 +177,7 @@ object MultiParty:
         resourceF.map(Placement.Local[Anisotropic[V], To](_, m))
       else resourceF.map(Placement.Remote[Anisotropic[V], To](_))
 
-    def reachablePeers[RP <: Peer](using PeerTag[RP])[L <: Peer: Label]: F[Iterable[Remote[RP]]] =
+    def reachablePeers[RP <: Peer](using PeerTag[RP])[L <: Peer: Label]: F[NonEmptyList[Remote[RP]]] =
       network.alivePeersOf[RP]
 
     def take[Local <: Peer](using Label[Local])[V](placed: V on Local): F[V] =

@@ -19,6 +19,7 @@ import net.sigusr.mqtt.api.QualityOfService.AtLeastOnce
 import upickle.default as upickle
 
 import upickle.ReadWriter
+import cats.data.NonEmptyList
 
 object MqttNetwork:
 
@@ -104,12 +105,13 @@ object MqttNetwork:
       ) >> Temporal[F].sleep(keepAliveInterval)
     ).foreverM
 
-    override def alivePeersOf[RP <: Peer: PeerTag as remotePeerTag]: F[Iterable[Address[RP]]] =
+    override def alivePeersOf[RP <: Peer: PeerTag as remotePeerTag]: F[NonEmptyList[Address[RP]]] =
       for
         now <- Temporal[F].realTime
         peers <- activePeers.get
       yield peers.collect:
         case (addr, lastSeen) if now - lastSeen <= aliveTimeout && addr.tag == remotePeerTag => addr
+      ???
 
     override def send[V: EncodableTo[F, Format], To <: Peer: PeerTag](
         value: V,
