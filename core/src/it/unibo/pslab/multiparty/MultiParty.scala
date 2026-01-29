@@ -103,8 +103,6 @@ object MultiParty:
     type Remote[P <: Peer] = network.Address[P]
     opaque type Anisotropic[V] = Map[Any, V]
 
-    // override given [P <: Peer] => Order[Remote[P]] = network.given_Order_Address
-
     def on[Local <: Peer](using local: PeerTag[Local])[V](body: Label[Local] ?=> F[V]): F[V on Local] =
       val runtimerPeer = summon[PeerTag[P]]
       given Label[Local] = new Label[Local] {}
