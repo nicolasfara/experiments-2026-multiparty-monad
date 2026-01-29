@@ -32,15 +32,15 @@ object PingPong:
       newCounter <- on[Ponger]:
         for
           v <- take(onPonger)
-          _ <- Console[F].println(s"Ponger received value: $v")
+          _ <- F.println(s"Ponger received value: $v")
         yield v + 1
       newCounterOnPinger <- comm[Ponger, Pinger](newCounter)
       result <- on[Pinger]:
         for
           v <- take(newCounterOnPinger)
-          _ <- Console[F].println(s"Pinger received value: $v")
+          _ <- F.println(s"Pinger received value: $v")
         yield v + 1
-      _ <- Temporal[F].sleep(1.second)
+      _ <- F.sleep(1.second)
       _ <- pingPong(result)
     yield ()
 
@@ -54,7 +54,7 @@ object PingPong:
 
 object Pinger extends IOApp.Simple:
   override def run: IO[Unit] = MqttNetwork
-    .localBroker[IO, PingPong.Pinger]("pinger-peer")
+    .localBroker[IO, PingPong.Pinger]()
     .use: network =>
       val env = Environment.make[IO]
       val lang = MultiParty.make(env, network)
@@ -63,7 +63,7 @@ object Pinger extends IOApp.Simple:
 
 object Ponger extends IOApp.Simple:
   override def run: IO[Unit] = MqttNetwork
-    .localBroker[IO, PingPong.Ponger]("ponger-peer")
+    .localBroker[IO, PingPong.Ponger]()
     .use: network =>
       val env = Environment.make[IO]
       val lang = MultiParty.make(env, network)

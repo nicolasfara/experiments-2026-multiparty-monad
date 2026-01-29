@@ -34,13 +34,13 @@ object MainWorker:
       _ <- on[Worker]:
         for
           t <- take(taskOnWorker)
-          _ <- Console[F].println(s"Worker received task with input ${t.x}, computed result: ${t.compute}")
+          _ <- F.println(s"Worker received task with input ${t.x}, computed result: ${t.compute}")
         yield ()
     yield ()
 
 object MainServer extends IOApp.Simple:
   override def run: IO[Unit] = MqttNetwork
-    .localBroker[IO, Main]("main-server-peer")
+    .localBroker[IO, Main]()
     .use: network =>
       val env = Environment.make[IO]
       val lang = MultiParty.make(env, network)
@@ -49,7 +49,7 @@ object MainServer extends IOApp.Simple:
 
 object Worker1 extends IOApp.Simple:
   override def run: IO[Unit] = MqttNetwork
-    .localBroker[IO, Worker]("worker1-peer")
+    .localBroker[IO, Worker]()
     .use: network =>
       val env = Environment.make[IO]
       val lang = MultiParty.make(env, network)
@@ -58,7 +58,7 @@ object Worker1 extends IOApp.Simple:
 
 object Worker2 extends IOApp.Simple:
   override def run: IO[Unit] = MqttNetwork
-    .localBroker[IO, Worker]("worker2-peer")
+    .localBroker[IO, Worker]()
     .use: network =>
       val env = Environment.make[IO]
       val lang = MultiParty.make(env, network)
