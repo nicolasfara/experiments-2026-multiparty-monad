@@ -31,10 +31,18 @@ object MainWorker:
           message <- anisotropicMessage[Main, Worker](allocation, Task(0))
         yield message
       taskOnWorker <- anisotropicComm[Main, Worker](task)
-      _ <- on[Worker]:
+      partialResult <- on[Worker]:
         for
           t <- take(taskOnWorker)
-          _ <- F.println(s"Worker received task with input ${t.x}, computed result: ${t.compute}")
+          res <- t.compute.pure[F]
+          _ <- F.println(s"Worker received task with input ${t.x}, computed result: $res")
+        yield res
+      allResults <- coAnisotropicComm[Worker, Main](partialResult)
+      _ <- on[Main]:
+        for
+          resultsMap <- takeAll(allResults)
+          result = resultsMap.values.reduce(_ + _)
+          _ <- F.println(s"Main collected results from workers: ${result}")
         yield ()
     yield ()
 
