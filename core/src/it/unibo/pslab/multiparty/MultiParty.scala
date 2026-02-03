@@ -33,7 +33,7 @@ trait MultiParty[F[_]]:
       Label[From],
   )[V](value: Map[Remote[To], V], default: V): F[Anisotropic[V]]
 
-  def comm[From <: TiedWithSingle[To], To <: Peer](using
+  def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
       PeerTag[To],
   )[V: Codable[F]](value: V on From): F[V on To]
@@ -65,7 +65,7 @@ object MultiParty:
   )[F[_]: Monad, V](body: Label[Local] ?=> F[V])(using lang: MultiParty[F]): F[V on Local] =
     lang.on[Local](body)
 
-  def comm[From <: TiedWithSingle[To], To <: Peer](using
+  def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
       PeerTag[To],
   )[F[_]: Monad](using lang: MultiParty[F])[V: Codable[F]](value: V on From): F[V on To] =
