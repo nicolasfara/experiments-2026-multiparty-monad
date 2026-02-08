@@ -8,7 +8,8 @@ object Peers:
 
   sealed trait PeerTag[-P <: Peer]
 
-  private case class PeerTagImpl[-P <: Peer](fqn: String) extends PeerTag[P]
+  private case class PeerTagImpl[-P <: Peer](fqn: String) extends PeerTag[P]:
+    override def toString: String = fqn
 
   given [P <: Peer] => ReadWriter[PeerTag[P]] = readwriter[String].bimap[PeerTag[P]](
     { case PeerTagImpl(fqn) => fqn },
