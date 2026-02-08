@@ -15,23 +15,23 @@ trait Label[+V] extends Erased
 
 trait MultiParty[F[_]]:
   type Remote[P <: Peer]
-  type Anisotropic[V]
+  type Anisotropic[P <: Peer, V]
 
   def coAnisotropicComm[From <: TiedWithSingle[To], To <: TiedWithMultiple[From]](using
       PeerTag[From],
       PeerTag[To],
-  )[V: Codable[F]](value: V on From): F[Anisotropic[V] on To]
+  )[V: Codable[F]](value: V on From): F[Anisotropic[From, V] on To]
 
   def anisotropicComm[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
       PeerTag[To],
-  )[V: Codable[F]](value: Anisotropic[V] on From): F[V on To]
+  )[V: Codable[F]](value: Anisotropic[To, V] on From): F[V on To]
 
   def anisotropicMessage[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
       PeerTag[To],
       Label[From],
-  )[V](value: Map[Remote[To], V], default: V): F[Anisotropic[V]]
+  )[V](value: Map[Remote[To], V], default: V): F[Anisotropic[To, V]]
 
   def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
@@ -49,7 +49,9 @@ trait MultiParty[F[_]]:
 
   def take[Local <: Peer](using Label[Local])[V](placed: V on Local): F[V]
 
-  def takeAll[Local <: Peer](using Label[Local])[V](placed: Anisotropic[V] on Local): F[Map[Remote[Peer], V]]
+  def takeAll[Local <: Peer, RP <: Peer](using
+      Label[Local],
+  )[V](placed: Anisotropic[RP, V] on Local): F[Map[Remote[RP], V]]
 
 object MultiParty:
   infix opaque type on[+V, -P <: Peer] = Placement[V, P]
@@ -74,12 +76,12 @@ object MultiParty:
   def take[Local <: Peer](using Label[Local])[F[_]: Monad, V](placed: V on Local)(using lang: MultiParty[F]): F[V] =
     lang.take[Local](placed)
 
-  def takeAll[Local <: Peer](using
+  def takeAll[Local <: Peer, RP <: Peer](using
       Label[Local],
   )[F[_]: Monad, V](using
       lang: MultiParty[F],
-  )(placed: lang.Anisotropic[V] on Local): F[Map[lang.Remote[Peer], V]] =
-    lang.takeAll[Local](placed)
+  )(placed: lang.Anisotropic[RP, V] on Local): F[Map[lang.Remote[RP], V]] =
+    lang.takeAll[Local, RP](placed)
 
   def isotropicComm[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
@@ -92,7 +94,7 @@ object MultiParty:
       PeerTag[To],
   )[F[_]: Monad](using
       lang: MultiParty[F],
-  )[V: Codable[F]](value: lang.Anisotropic[V] on From): F[V on To] =
+  )[V: Codable[F]](value: lang.Anisotropic[To, V] on From): F[V on To] =
     lang.anisotropicComm[From, To](value)
 
   def anisotropicMessage[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
@@ -101,13 +103,13 @@ object MultiParty:
       Label[From],
   )[F[_]: Monad, V](using
       lang: MultiParty[F],
-  )(value: Map[lang.Remote[To], V], default: V): F[lang.Anisotropic[V]] =
+  )(value: Map[lang.Remote[To], V], default: V): F[lang.Anisotropic[To, V]] =
     lang.anisotropicMessage[From, To](value, default)
 
   def coAnisotropicComm[From <: TiedWithSingle[To], To <: TiedWithMultiple[From]](using
       PeerTag[From],
       PeerTag[To],
-  )[F[_]: Monad](using lang: MultiParty[F])[V: Codable[F]](value: V on From): F[lang.Anisotropic[V] on To] =
+  )[F[_]: Monad](using lang: MultiParty[F])[V: Codable[F]](value: V on From): F[lang.Anisotropic[From, V] on To] =
     lang.coAnisotropicComm[From, To](value)
 
   def reachablePeers[RP <: Peer](using
@@ -122,7 +124,7 @@ object MultiParty:
       network: Network[F, P],
   ): MultiParty[F] = new MultiParty[F]:
     type Remote[P <: Peer] = network.Address[P]
-    opaque type Anisotropic[V] = Map[Any, V]
+    opaque type Anisotropic[RP <: Peer, V] = Map[Remote[RP], V]
 
     def on[Local <: Peer](using local: PeerTag[Local])[V](body: Label[Local] ?=> F[V]): F[V on Local] =
       val runtimerPeer = summon[PeerTag[P]]
@@ -172,7 +174,7 @@ object MultiParty:
     def anisotropicComm[From <: TiedWithMultiple[To], To <: TiedWithSingle[From]](using
         from: PeerTag[From],
         to: PeerTag[To],
-    )[V: Codable[F]](value: Anisotropic[V] on From): F[V on To] =
+    )[V: Codable[F]](value: Anisotropic[To, V] on From): F[V on To] =
       val runtimePeer = summon[PeerTag[P]]
       if runtimePeer == from then
         val Placement.Local(res, vMap) = value.runtimeChecked
@@ -194,15 +196,15 @@ object MultiParty:
         from: PeerTag[From],
         to: PeerTag[To],
         l: Label[From],
-    )[V](value: Map[Remote[To], V], default: V): F[Anisotropic[V]] =
+    )[V](value: Map[Remote[To], V], default: V): F[Anisotropic[To, V]] =
       val runtimePeer = summon[PeerTag[P]]
-      if runtimePeer == from then value.map(_.asInstanceOf[Any] -> _).withDefault(_ => default).pure
+      if runtimePeer == from then value.withDefault(_ => default).pure
       else Map.empty.pure
 
     def coAnisotropicComm[From <: TiedWithSingle[To], To <: TiedWithMultiple[From]](using
         from: PeerTag[From],
         to: PeerTag[To],
-    )[V: Codable[F]](value: V on From): F[Anisotropic[V] on To] =
+    )[V: Codable[F]](value: V on From): F[Anisotropic[From, V] on To] =
       val runtimePeer = summon[PeerTag[P]]
       if runtimePeer == from then
         val Placement.Local(res, v) = value.runtimeChecked
@@ -225,8 +227,8 @@ object MultiParty:
       val Placement.Local(res, v) = placed.runtimeChecked
       v.pure
 
-    def takeAll[Local <: Peer](using
+    def takeAll[Local <: Peer, RP <: Peer](using
         Label[Local],
-    )[V](placed: Anisotropic[V] on Local): F[Map[Remote[Peer], V]] =
+    )[V](placed: Anisotropic[RP, V] on Local): F[Map[Remote[RP], V]] =
       val Placement.Local(res, vMap) = placed.runtimeChecked
-      vMap.asInstanceOf[Map[Remote[Peer], V]].pure
+      vMap.pure
