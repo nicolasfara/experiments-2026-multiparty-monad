@@ -1,4 +1,4 @@
-# ScalaTrope
+# ScalaTropy
 
 ## How to run
 

@@ -42,21 +42,21 @@ object MasterWorker:
         for
           resultsMap <- takeAll(allResults)
           result = resultsMap.values.sum
-          _ <- F.println(s"Main collected results from workers: ${result}")
+          _ <- F.println(s"Master collected results from workers: ${result}")
         yield ()
     yield ()
 
-object MainServer extends IOApp.Simple:
+object MasterServer extends IOApp.Simple:
   override def run: IO[Unit] =
-    val mqttNetwork = MqttNetwork.localBroker[IO, Master](Configuration(appId = "mainworker"))
+    val mqttNetwork = MqttNetwork.localBroker[IO, Master](Configuration(appId = "masterworker"))
     ScalaTropy(masterWorkerProgram[IO]).projectedOn[Master](using mqttNetwork)
 
 object Worker1 extends IOApp.Simple:
   override def run: IO[Unit] =
-    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "mainworker"))
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "masterworker"))
     ScalaTropy(masterWorkerProgram[IO]).projectedOn[Worker](using mqttNetwork)
 
 object Worker2 extends IOApp.Simple:
   override def run: IO[Unit] =
-    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "mainworker"))
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "masterworker"))
     ScalaTropy(masterWorkerProgram[IO]).projectedOn[Worker](using mqttNetwork)
