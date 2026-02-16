@@ -71,9 +71,9 @@ object AsyncKeyValueStoreChoreo:
     def replicate(using MultiParty[F]): F[Unit] =
       def loop(backupHandler: BackupHandler[F] on Backup): F[Unit] =
         for
-          rqs <- on[Primary]:
+          requestsToReplicate <- on[Primary]:
             take(queue) flatMap (_.tryTakeN(None))
-          requestsOnBackup <- isotropicComm[Primary, Backup](rqs)
+          requestsOnBackup <- isotropicComm[Primary, Backup](requestsToReplicate)
           ack <- on[Backup](take(backupHandler) flatMap (_(requestsOnBackup)))
           _ <- coAnisotropicComm[Backup, Primary](ack)
           _ <- F.sleep(1.second)
