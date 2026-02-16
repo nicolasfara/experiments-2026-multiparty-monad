@@ -120,7 +120,7 @@ import AsyncKeyValueStoreChoreo.*
 object PrimaryApp extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
-      .localBroker[IO, Primary](Configuration(appId = "kvs"))
+      .localBroker[IO, Primary](Configuration(appId = "async-kvs"))
       .use: net =>
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
@@ -133,7 +133,7 @@ object PrimaryApp extends IOApp.Simple:
 object BackupApp extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
-      .localBroker[IO, Backup](Configuration(appId = "kvs"))
+      .localBroker[IO, Backup](Configuration(appId = "async-kvs"))
       .use: net =>
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
@@ -146,7 +146,7 @@ object BackupApp extends IOApp.Simple:
 object Client1App extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
-      .localBroker[IO, Client](Configuration(appId = "kvs"))
+      .localBroker[IO, Client](Configuration(appId = "async-kvs"))
       .use: net =>
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
@@ -159,7 +159,7 @@ object Client1App extends IOApp.Simple:
 object Client2App extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
-      .localBroker[IO, Client](Configuration(appId = "kvs"))
+      .localBroker[IO, Client](Configuration(appId = "async-kvs"))
       .use: net =>
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for

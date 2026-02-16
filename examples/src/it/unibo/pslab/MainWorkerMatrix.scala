@@ -1,22 +1,23 @@
 package it.unibo.pslab
 
+import scala.util.Random
+
 import it.unibo.pslab.UpickleCodable.given
 import it.unibo.pslab.multiparty.MultiParty
 import it.unibo.pslab.multiparty.MultiParty.*
+import it.unibo.pslab.network.NetworkMonitor.withCsvMonitoring
 import it.unibo.pslab.network.mqtt.MqttNetwork
 import it.unibo.pslab.network.mqtt.MqttNetwork.Configuration
 import it.unibo.pslab.peers.Peers.Quantifier.*
 
+import cats.{ Monad, MonadThrow }
+import cats.data.NonEmptyList
 import cats.effect.{ IO, IOApp }
 import cats.effect.std.Console
 import cats.syntax.all.*
 import upickle.default.ReadWriter
 
 import MainWorkerMatrix.*
-import cats.MonadThrow
-import scala.util.Random
-import cats.data.NonEmptyList
-import cats.Monad
 
 case class Matrix[T](values: List[List[T]]) derives ReadWriter:
   val rows: Int = values.length
@@ -25,9 +26,10 @@ case class Matrix[T](values: List[List[T]]) derives ReadWriter:
   def show: String = values.map(_.map(_.toString).mkString("  ")).mkString("\n")
 
 object Matrix:
-  def draw(size: Int = 50): Matrix[Double] = Matrix(
-    List.fill(Random.nextInt(size) + 1, Random.nextInt(size) + 1)(Random.nextDouble() * 10),
-  )
+  def draw(rows: Int = 10, cols: Int = 10): Matrix[Double] = Matrix(List.fill(rows, cols)(Random.nextDouble() * 10))
+
+  def deterministic(rows: Int, cols: Int): Matrix[Double] =
+    Matrix(List.tabulate(rows, cols)((i, j) => ((i + 1) * (j + 1)).toDouble))
 
 case class MatrixChunk[T](startRow: Int, endRow: Int, rows: Matrix[T]) derives ReadWriter
 
@@ -36,6 +38,7 @@ case class Vec[T](values: List[T]) derives ReadWriter:
 
 object Vec:
   def draw(size: Int): Vec[Double] = Vec(List.fill(size)(Random.nextDouble() * 10))
+  def deterministic(size: Int): Vec[Double] = Vec(List.tabulate(size)(i => (i + 1).toDouble))
 
 case class VecChunk[T](startRow: Int, endRow: Int, values: Vec[T]) derives ReadWriter
 
@@ -55,16 +58,16 @@ object MainWorkerMatrix:
 
   def mainWorkerApp[F[_]: {MonadThrow, Console}](using lang: MultiParty[F]): F[Unit] =
     for
-      matrix <- on[Main](Matrix.draw(10).pure)
-      vector <- on[Main](take(matrix).map(_.cols).map(Vec.draw))
-      _ <- mainWorker(matrix, vector)
+      matrix <- on[Main](Matrix.deterministic(50, 50).pure)
+      vector <- on[Main](take(matrix).map(_.cols).map(Vec.deterministic))
+      _ <- impl(matrix, vector)
     yield ()
 
-  def mainWorker[F[_]: {MonadThrow, Console}](using
+  def impl[F[_]: {MonadThrow, Console}](using
       MultiParty[F],
   )(matrix: Matrix[Double] on Main, vector: Vec[Double] on Main): F[Unit] =
     for
-      task <- on[Main]:
+      tasks <- on[Main]:
         for
           m <- take(matrix)
           v <- take(vector)
@@ -73,7 +76,7 @@ object MainWorkerMatrix:
           allocation <- allocate(m, v) to workers
           message <- anisotropicMessage[Main, Worker](allocation, Task.nil)
         yield message
-      taskOnWorker <- anisotropicComm[Main, Worker](task)
+      taskOnWorker <- anisotropicComm[Main, Worker](tasks)
       partialResult <- on[Worker]:
         take(taskOnWorker).map(_.compute)
       allResults <- coAnisotropicComm[Worker, Main](partialResult)
@@ -107,11 +110,51 @@ object MatrixMain extends IOApp.Simple:
     ScalaTropy(mainWorkerApp[IO]).projectedOn[Main](using mqttNetwork)
 
 object MatrixWorker1 extends IOApp.Simple:
-  override def run: IO[Unit] =
+  override def run: IO[Unit] = withCsvMonitoring("worker1-matrix.csv"):
     val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
     ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
 
 object MatrixWorker2 extends IOApp.Simple:
-  override def run: IO[Unit] =
+  override def run: IO[Unit] = withCsvMonitoring("worker2-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker3 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker3-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker4 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker4-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker5 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker5-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker6 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker6-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker7 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker7-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker8 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker8-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker9 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker9-matrix.csv"):
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
+
+object MatrixWorker10 extends IOApp.Simple:
+  override def run: IO[Unit] = withCsvMonitoring("worker10-matrix.csv"):
     val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "main-worker-matrix"))
     ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
