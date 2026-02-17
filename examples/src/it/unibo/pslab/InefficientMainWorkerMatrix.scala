@@ -1,7 +1,5 @@
 package it.unibo.pslab
 
-import scala.util.Random
-
 import it.unibo.pslab.UpickleCodable.given
 import it.unibo.pslab.multiparty.MultiParty
 import it.unibo.pslab.multiparty.MultiParty.*
@@ -17,32 +15,9 @@ import cats.effect.std.Console
 import cats.syntax.all.*
 import upickle.default.ReadWriter
 
-import MainWorkerMatrix.*
+import InefficientMainWorkerMatrix.*
 
-case class Matrix[T](values: List[List[T]]) derives ReadWriter:
-  val rows: Int = values.length
-  val cols: Int = if rows > 0 then values.head.length else 0
-  def rowSlice(start: Int, end: Int): Matrix[T] = Matrix(values.slice(start, end))
-  def show: String = values.map(_.map(_.toString).mkString("  ")).mkString("\n")
-
-object Matrix:
-  def draw(rows: Int = 10, cols: Int = 10): Matrix[Double] = Matrix(List.fill(rows, cols)(Random.nextDouble() * 10))
-
-  def deterministic(rows: Int, cols: Int): Matrix[Double] =
-    Matrix(List.tabulate(rows, cols)((i, j) => ((i + 1) * (j + 1)).toDouble))
-
-case class MatrixChunk[T](startRow: Int, endRow: Int, rows: Matrix[T]) derives ReadWriter
-
-case class Vec[T](values: List[T]) derives ReadWriter:
-  def show: String = values.map(_.toString).mkString("[", ", ", "]")
-
-object Vec:
-  def draw(size: Int): Vec[Double] = Vec(List.fill(size)(Random.nextDouble() * 10))
-  def deterministic(size: Int): Vec[Double] = Vec(List.tabulate(size)(i => (i + 1).toDouble))
-
-case class VecChunk[T](startRow: Int, endRow: Int, values: Vec[T]) derives ReadWriter
-
-object MainWorkerMatrix:
+object InefficientMainWorkerMatrix:
   type Main <: { type Tie <: Multiple[Worker] }
   type Worker <: { type Tie <: Single[Main] }
 
@@ -50,7 +25,9 @@ object MainWorkerMatrix:
 
   case class Task(chunk: MatrixChunk[Double], vector: Vec[Double]) derives ReadWriter:
     def compute: PartialResult =
-      val res = Vec(chunk.rows.values.map(_.zip(vector.values).map { case (a, b) => a * b }.sum))
+      val res = Vec(
+        chunk.rows.values.slice(chunk.startRow, chunk.endRow).map(_.zip(vector.values).map { case (a, b) => a * b }.sum),
+      )
       PartialResult(VecChunk(chunk.startRow, chunk.endRow, res))
 
   object Task:
@@ -99,24 +76,21 @@ object MainWorkerMatrix:
           .mapWithIndex: (worker, index) =>
             val startRow = index * chunkSize
             val endRow = math.min(startRow + chunkSize, matrix.rows)
-            worker -> Task(MatrixChunk(startRow, endRow, matrix.rowSlice(startRow, endRow)), vector)
+            worker -> Task(MatrixChunk(startRow, endRow, matrix), vector)
           .toList
           .toMap
           .pure
 
-object MatrixMain extends IOApp:
+object InefficientMatrixMain extends IOApp:
   override def run(args: List[String]): IO[ExitCode] =
     args.headOption match
       case Some(label) =>
-        withCsvMonitoring(s"evaluation/selective-experiment-$label.csv"):
-          val mqttNetwork = MqttNetwork.localBroker[IO, Main](Configuration(appId = "master-worker-matrix"))
+        withCsvMonitoring(s"evaluation/broadcasting-experiment-$label.csv"):
+          val mqttNetwork = MqttNetwork.localBroker[IO, Main](Configuration(appId = "broadcast-master-worker-matrix"))
           ScalaTropy(mainWorkerApp[IO]).projectedOn[Main](using mqttNetwork).as(ExitCode.Success)
-      case None => IO.println("Usage: MatrixMain <label>").as(ExitCode.Error)
+      case None => IO.println("Usage: InefficientMatrixMain <label>").as(ExitCode.Error)
 
-object MatrixWorker extends IOApp:
-  override def run(args: List[String]): IO[ExitCode] =
-    args.headOption match
-      case Some(workerId) =>
-        val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "master-worker-matrix"))
-        ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork).as(ExitCode.Success)
-      case None => IO.println("Usage: MatrixWorker <workerId>").as(ExitCode.Error)
+object InefficientMatrixWorker extends IOApp.Simple:
+  override def run: IO[Unit] =
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "broadcast-master-worker-matrix"))
+    ScalaTropy(mainWorkerApp[IO]).projectedOn[Worker](using mqttNetwork)
