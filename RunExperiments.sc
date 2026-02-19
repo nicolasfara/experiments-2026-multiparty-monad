@@ -29,20 +29,20 @@ object ExperimentRunner:
   def compile(): Unit = "./mill examples.assembly".!
 
   def runExperimentsUsingSelectiveComm(maxWorkers: Int): Unit =
-    log("Running Master Woker program with selective communications")
+    log("Running MatMul Master-Worker program with selective style communications")
     runExperiments(
       maxWorkers,
-      masterClass = s"$basePackage.MatrixMain",
-      workerClass = s"$basePackage.MatrixWorker",
+      masterClass = s"$basePackage.matmul.MatMulMaster",
+      workerClass = s"$basePackage.matmul.MatMulWorker",
       label = "selective experiment",
     )
 
   def runExperimentsUsingBroadcastComm(maxWorkers: Int): Unit =
-    log("Running Master Worker program with all-to-all communications")
+    log("Running MatMul Master-Worker program with broadcasting style communications")
     runExperiments(
       maxWorkers,
-      masterClass = s"$basePackage.InefficientMatrixMain",
-      workerClass = s"$basePackage.InefficientMatrixWorker",
+      masterClass = s"$basePackage.matmul.InefficientMatMulMaster",
+      workerClass = s"$basePackage.matmul.InefficientMatMulWorker",
       label = "broadcasting (inefficient) experiment",
     )
 

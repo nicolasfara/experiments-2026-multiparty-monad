@@ -4,6 +4,11 @@
 
 Examples are provided in the `examples/` directory and use an MQTT-based network to demonstrate our language distributed capabilities.
 
+- `PingPong`: a simple Ping-Pong example between two parties incrementing a counter for each message exchange;
+- `TrianglePingPong`: a Ping-Pong example between three parties, where each party sends a message to the next one in a ring topology;
+- `MasterWorker`: a Master-Worker application example where a master node distributes tasks to multiple worker nodes, waiting for their partial results to aggregate them into a final result.
+- `matmul/*MatMulMasterWorker`: the Master-Worker example applied to the matrix multiplication problem. This example is provided in two versions, one using a broadcasting communication strategy and one using a selective communication strategy.
+
 To run them, use the Docker Compose file provided in the root of the repository:
 
 ```bash

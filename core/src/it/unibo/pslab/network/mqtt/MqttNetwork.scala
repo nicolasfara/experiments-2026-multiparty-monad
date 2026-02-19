@@ -54,7 +54,7 @@ object MqttNetwork:
       sessionConfig: SessionConfig,
   ): Resource[F, Network[F, LP]] =
     for
-      _ <- Resource.eval(F.println("=== Peers startup configuration ==="))
+      _ <- Resource.eval(F.println(s"=== Peers startup configuration [wait ${networkConfig.initialWaitWindow}] ==="))
       session <- Session(transportConfig, sessionConfig)
       incomingMsgs <- Resource.eval(Ref.of(Map.empty[(Address, Reference), Deferred[F, Array[Byte]]]))
       alivePeers <- Resource.eval(Ref.of(Set.empty[Address]))
