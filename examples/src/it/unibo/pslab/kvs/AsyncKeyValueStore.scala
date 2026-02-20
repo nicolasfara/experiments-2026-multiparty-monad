@@ -1,8 +1,9 @@
-package it.unibo.pslab
+package it.unibo.pslab.kvs
 
 import scala.concurrent.duration.DurationInt
 
-import it.unibo.pslab.multiparty.{ Label, MultiParty }
+import it.unibo.pslab.UpickleCodable.given
+import it.unibo.pslab.multiparty.{ Environment, Label, MultiParty }
 import it.unibo.pslab.multiparty.MultiParty.*
 import it.unibo.pslab.network.mqtt.MqttNetwork
 import it.unibo.pslab.network.mqtt.MqttNetwork.Configuration
@@ -16,10 +17,19 @@ import cats.syntax.all.*
 import upickle.default.ReadWriter
 
 import KeyValueStore.inMemory as inMemoryKeyValueStore
-import UpickleCodable.given
-import it.unibo.pslab.multiparty.Environment
+import AsyncKeyValueStore.{ Client, Primary, Backup, Request }
 
-object AsyncKeyValueStoreChoreo:
+/**
+ * An asynchronous version of the Key-Value Store example, where the primary node processes client requests and
+ * replicates them to the backup nodes asynchronously.
+ *
+ * Moreover, this example showcases how it is possible to spawn two concurrent sub-choreographies: the request
+ * processing and the replication logic. They co-exist and coordinate with each other by sharing a queue of pending
+ * write requests that need to be replicated: when the request processing choreography receives a write request, it puts
+ * it in the queue and the replication choreography replicates them as soon as they are enqueued, without making the
+ * client wait for the replication to complete before receiving a response from the primary.
+ */
+object AsyncKeyValueStore:
 
   type Client <: { type Tie <: Single[Primary] }
   type Primary <: { type Tie <: Multiple[Backup] & Multiple[Client] }
@@ -40,21 +50,20 @@ object AsyncKeyValueStoreChoreo:
   type RequestsHandler[F[_]] =
     (lang: MultiParty[F]) ?=> lang.Anisotropic[Client, Request] on Primary => F[lang.Anisotropic[Client, Response]]
 
-  type BackupHandler[F[_]] = (lang: MultiParty[F]) ?=> List[Request.Put] on Backup => F[Unit]
+  type BackupHandler[F[_]] = MultiParty[F] ?=> List[Request.Put] on Backup => F[Unit]
 
   class Choreo[F[_]: {Async, Console, Temporal}](queue: Queue[F, Put] on Primary):
 
     def kvs(using lang: MultiParty[F]): F[Unit] =
-      def loop(handler: RequestsHandler[F] on Primary): F[Unit] =
-        for
-          requestOnClient <- on[Client](waitForRequest)
-          requestsOnPrimary <- coAnisotropicComm[Client, Primary](requestOnClient)
-          responsesOnPrimary <- on[Primary](take(handler) flatMap (_(requestsOnPrimary)))
-          responseOnClient <- anisotropicComm[Primary, Client](responsesOnPrimary)
-          _ <- on[Client]:
-            take(responseOnClient) flatMap (response => F.println(s"> $response"))
-          _ <- loop(handler)
-        yield ()
+      def loop(handler: RequestsHandler[F] on Primary): F[Unit] = for
+        requestOnClient <- on[Client](waitForRequest)
+        requestsOnPrimary <- coAnisotropicComm[Client, Primary](requestOnClient)
+        responsesOnPrimary <- on[Primary](take(handler) flatMap (_(requestsOnPrimary)))
+        responseOnClient <- anisotropicComm[Primary, Client](responsesOnPrimary)
+        _ <- on[Client]:
+          take(responseOnClient) flatMap (response => F.println(s"> $response"))
+        _ <- loop(handler)
+      yield ()
       on[Primary](storeHandler).flatMap(loop)
 
     private def storeHandler(using Label[Primary]): F[RequestsHandler[F]] =
@@ -86,6 +95,7 @@ object AsyncKeyValueStoreChoreo:
         requests =>
           for
             rqs <- take(requests)
+            _ <- F.println(s"[Backup] Received ${rqs.size} requests: ${rqs.mkString(", ")}")
             _ = rqs.foreach(request => store process request)
           yield ()
 
@@ -115,9 +125,7 @@ object AsyncKeyValueStoreChoreo:
         case Request.Put(key, value) => store.put(key, value).map(_ => Response.Ack)
         case Request.Empty           => Response.Empty.pure
 
-import AsyncKeyValueStoreChoreo.*
-
-object PrimaryApp extends IOApp.Simple:
+object AsyncPrimaryNode extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
       .localBroker[IO, Primary](Configuration(appId = "async-kvs"))
@@ -125,12 +133,12 @@ object PrimaryApp extends IOApp.Simple:
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
           q <- on[Primary](Queue.unbounded[IO, Request.Put])
-          app = Choreo[IO](q)
+          app = AsyncKeyValueStore.Choreo[IO](q)
           _ <- app.replicate(using MultiParty.make(Environment.make[IO], net)).start
           _ <- app.kvs(using MultiParty.make(Environment.make[IO], net))
         yield ()
 
-object BackupApp extends IOApp.Simple:
+object AsyncBackupNode extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
       .localBroker[IO, Backup](Configuration(appId = "async-kvs"))
@@ -138,12 +146,12 @@ object BackupApp extends IOApp.Simple:
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
           q <- on[Primary](Queue.unbounded[IO, Request.Put])
-          app = Choreo[IO](q)
+          app = AsyncKeyValueStore.Choreo[IO](q)
           _ <- app.replicate(using MultiParty.make(Environment.make[IO], net)).start
           _ <- app.kvs(using MultiParty.make(Environment.make[IO], net))
         yield ()
 
-object Client1App extends IOApp.Simple:
+object AsyncClient1Node extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
       .localBroker[IO, Client](Configuration(appId = "async-kvs"))
@@ -151,12 +159,12 @@ object Client1App extends IOApp.Simple:
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
           q <- on[Primary](Queue.unbounded[IO, Request.Put])
-          app = Choreo[IO](q)
+          app = AsyncKeyValueStore.Choreo[IO](q)
           _ <- app.replicate(using MultiParty.make(Environment.make[IO], net)).start
           _ <- app.kvs(using MultiParty.make(Environment.make[IO], net))
         yield ()
 
-object Client2App extends IOApp.Simple:
+object AsyncClient2Node extends IOApp.Simple:
   override def run: IO[Unit] =
     MqttNetwork
       .localBroker[IO, Client](Configuration(appId = "async-kvs"))
@@ -164,7 +172,7 @@ object Client2App extends IOApp.Simple:
         given MultiParty[IO] = MultiParty.make(Environment.make[IO], net)
         for
           q <- on[Primary](Queue.unbounded[IO, Request.Put])
-          app = Choreo[IO](q)
+          app = AsyncKeyValueStore.Choreo[IO](q)
           _ <- app.replicate(using MultiParty.make(Environment.make[IO], net)).start
           _ <- app.kvs(using MultiParty.make(Environment.make[IO], net))
         yield ()

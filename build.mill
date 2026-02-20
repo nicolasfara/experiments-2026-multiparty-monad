@@ -10,10 +10,6 @@ import mill.api.Task.Simple
 
 trait CommonScala extends ScalaModule with ScalafixModule {
   def scalaVersion = "3.8.1"
-  //  def scoverageVersion = "2.1.0"
-
-  // def jvmId = "temurin:23.0.1"
-  // def jvmIndexVersion = "latest.release"
 
   def scalacOptions = Seq(
     "-Werror",
@@ -21,18 +17,15 @@ trait CommonScala extends ScalaModule with ScalafixModule {
     "-indent",
     "-unchecked",
     "-explain",
-    // "-Xcheck-macros",
     "-Wunused:imports",
-    //    "-source:3.8",
-    //    "-Xprint:cc",
-    //  "-Ycheck:all",
-    //    "-Ycc-debug",
+    "-deprecation",
     "-experimental",
     "-feature",
     "-language:implicitConversions",
     "-language:experimental.modularity",
-    //    "-language:experimental.captureChecking",
-    //    "-language:experimental.pureFunctions",
+    // Silence SemanticDB extraction warnings (VSCode's Metals doesn't like the `(l: MultiParty[F]) ?=>` syntax,
+    // but it's actually correct and works fine with the compiler, so we can ignore these warnings)
+    "-Wconf:msg=Internal error in extracting SemanticDB:s",
   )
 
   def mvnDeps = Seq(

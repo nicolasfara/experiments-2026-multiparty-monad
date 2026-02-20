@@ -21,13 +21,13 @@ object PingPong:
   type Pinger <: { type Tie <: Single[Ponger] }
   type Ponger <: { type Tie <: Single[Pinger] }
 
-  def pingPongProgram[F[_]: {Monad, Console, Temporal}](using lang: MultiParty[F]): F[Unit] =
+  def pingPongProgram[F[_]: {Monad, Console, Temporal}](using MultiParty[F]): F[Unit] =
     for
       initial <- on[Pinger](0.pure)
       _ <- pingPong(initial)
     yield ()
 
-  def pingPong[F[_]: {Monad, Console, Temporal}](using lang: MultiParty[F])(initial: Int on Pinger): F[Unit] =
+  def pingPong[F[_]: {Monad, Console, Temporal}](using MultiParty[F])(initial: Int on Pinger): F[Unit] =
     for
       onPonger <- comm[Pinger, Ponger](initial)
       newCounter <- on[Ponger]:

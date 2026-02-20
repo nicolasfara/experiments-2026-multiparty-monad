@@ -1,13 +1,13 @@
-package it.unibo.pslab
+package it.unibo.pslab.kvs
 
+import it.unibo.pslab.ScalaTropy
+import it.unibo.pslab.UpickleCodable.given
 import it.unibo.pslab.multiparty.{ Label, MultiParty }
 import it.unibo.pslab.multiparty.MultiParty.*
 import it.unibo.pslab.network.mqtt.MqttNetwork
 import it.unibo.pslab.network.mqtt.MqttNetwork.Configuration
 import it.unibo.pslab.peers.Peers.Quantifier.*
 
-import KeyValueStore.inMemory as inMemoryKeyValueStore
-import UpickleCodable.given
 import cats.{ Applicative, Monad }
 import cats.effect.{ IO, IOApp }
 import cats.effect.kernel.Sync
@@ -15,7 +15,14 @@ import cats.effect.std.Console
 import cats.syntax.all.*
 import upickle.default.ReadWriter
 
-object ModularizedSyncKeyValueStoreChoreo:
+import KeyValueStore.inMemory as inMemoryKeyValueStore
+import ModularSyncKeyValueStore.{ Client, Primary, Backup }
+
+/**
+ * An equivalent version of the SyncKeyValueStore example, but with the logic of the primary and backup nodes factored
+ * out into separate handlers to showcase how ScalaTropy's programs can be structured in a modular way.
+ */
+object ModularSyncKeyValueStore:
 
   type Client <: { type Tie <: Single[Primary] }
   type Primary <: { type Tie <: Multiple[Backup] & Multiple[Client] }
@@ -36,24 +43,24 @@ object ModularizedSyncKeyValueStoreChoreo:
   type RequestsHandler[F[_]] =
     (lang: MultiParty[F]) ?=> lang.Anisotropic[Client, Request] on Primary => F[lang.Anisotropic[Client, Response]]
 
-  type BackupHandler[F[_]] = (lang: MultiParty[F]) ?=> List[Request.Put] on Backup => F[Unit]
+  type BackupHandler[F[_]] = MultiParty[F] ?=> List[Request.Put] on Backup => F[Unit]
 
-  def app[F[_]: {Sync, Console}](using lang: MultiParty[F]): F[Unit] =
+  def choreo[F[_]: {Sync, Console}](using MultiParty[F]): F[Unit] =
     for
-      storeHandle <- on[Primary](storeHandler[F])
-      backupHandle <- on[Backup](backupHandler[F])
-      _ <- kvs(storeHandle, backupHandle)
+      primaryHandler <- on[Primary](primaryHandler[F])
+      backupHandler <- on[Backup](backupHandler[F])
+      _ <- kvs(primaryHandler, backupHandler)
     yield ()
 
   def kvs[F[_]: {Sync, Console}](
-      handler: RequestsHandler[F] on Primary,
+      primaryHandler: RequestsHandler[F] on Primary,
       backupHandler: BackupHandler[F] on Backup,
   )(using MultiParty[F]): F[Unit] =
     for
       requestOnClient <- on[Client](waitForRequest)
       requestsOnPrimary <- coAnisotropicComm[Client, Primary](requestOnClient)
       responsesOnPrimary <- on[Primary]:
-        take(handler) flatMap (_(requestsOnPrimary))
+        take(primaryHandler) flatMap (_(requestsOnPrimary))
       putRequests <- on[Primary]:
         takeAll(requestsOnPrimary) map (_.values.collect { case r: Put => r }.toList)
       requestsOnBackups <- isotropicComm[Primary, Backup](putRequests)
@@ -63,10 +70,10 @@ object ModularizedSyncKeyValueStoreChoreo:
       responseOnClient <- anisotropicComm[Primary, Client](responsesOnPrimary)
       _ <- on[Client]:
         take(responseOnClient) flatMap (response => F.println(s"> $response"))
-      _ <- kvs(handler, backupHandler)
+      _ <- kvs(primaryHandler, backupHandler)
     yield ()
 
-  def storeHandler[F[_]: Sync](using Label[Primary]): F[RequestsHandler[F]] =
+  def primaryHandler[F[_]: Sync](using Label[Primary]): F[RequestsHandler[F]] =
     inMemoryKeyValueStore[F, String, String].map: store =>
       requestsOnPrimary =>
         for
@@ -75,11 +82,12 @@ object ModularizedSyncKeyValueStoreChoreo:
           message <- anisotropicMessage[Primary, Client](responses, Response.Empty)
         yield message
 
-  def backupHandler[F[_]: Sync](using Label[Backup]): F[BackupHandler[F]] =
+  def backupHandler[F[_]: {Sync, Console}](using Label[Backup]): F[BackupHandler[F]] =
     inMemoryKeyValueStore[F, String, String].map: store =>
       requests =>
         for
           rqs <- take(requests)
+          _ <- F.println(s"[Backup] Received ${rqs.size} requests: ${rqs.mkString(", ")}")
           _ = rqs.foreach(request => store process request)
         yield ()
 
@@ -109,24 +117,22 @@ object ModularizedSyncKeyValueStoreChoreo:
         case Request.Put(key, value) => store.put(key, value).map(_ => Response.Ack)
         case Request.Empty           => Response.Empty.pure
 
-import ModularizedSyncKeyValueStoreChoreo.*
-
-object MPrimaryNode extends IOApp.Simple:
+object ModularPrimaryNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "mkvs"))
-    ScalaTropy(app[IO]).projectedOn[Primary](using net)
+    val net = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "modular-kvs"))
+    ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Primary](using net)
 
-object MBackupNode extends IOApp.Simple:
+object ModularBackupNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "mkvs"))
-    ScalaTropy(app[IO]).projectedOn[Backup](using net)
+    val net = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "modular-kvs"))
+    ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Backup](using net)
 
-object MClient1Node extends IOApp.Simple:
+object ModularClient1Node extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "mkvs"))
-    ScalaTropy(app[IO]).projectedOn[Client](using net)
+    val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "modular-kvs"))
+    ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Client](using net)
 
-object MClient2Node extends IOApp.Simple:
+object ModularClient2Node extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "mkvs"))
-    ScalaTropy(app[IO]).projectedOn[Client](using net)
+    val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "modular-kvs"))
+    ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Client](using net)

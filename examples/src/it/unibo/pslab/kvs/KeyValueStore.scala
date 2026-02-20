@@ -1,4 +1,4 @@
-package it.unibo.pslab
+package it.unibo.pslab.kvs
 
 import cats.effect.kernel.Sync
 import cats.effect.std.MapRef

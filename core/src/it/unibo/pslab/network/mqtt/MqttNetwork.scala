@@ -30,7 +30,7 @@ object MqttNetwork:
   case class Configuration(
       appId: String,
       clientId: String = s"pslab-${UUID.randomUUID()}",
-      initialWaitWindow: FiniteDuration = 5.seconds,
+      initialWaitWindow: FiniteDuration = 7.seconds,
       keepAliveInterval: FiniteDuration = 250.millis,
   )
 

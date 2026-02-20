@@ -1,5 +1,7 @@
-package it.unibo.pslab
+package it.unibo.pslab.kvs
 
+import it.unibo.pslab.ScalaTropy
+import it.unibo.pslab.UpickleCodable.given
 import it.unibo.pslab.multiparty.MultiParty
 import it.unibo.pslab.multiparty.MultiParty.*
 import it.unibo.pslab.network.mqtt.MqttNetwork
@@ -14,9 +16,9 @@ import cats.syntax.all.*
 import upickle.default.ReadWriter
 
 import KeyValueStore.inMemory as inMemoryKeyValueStore
-import UpickleCodable.given
+import SyncKeyValueStore.{ Client, Primary, Backup }
 
-object SyncKeyValueStoreChoreo:
+object SyncKeyValueStore:
 
   type Client <: { type Tie <: Single[Primary] }
   type Primary <: { type Tie <: Multiple[Backup] & Multiple[Client] }
@@ -34,7 +36,7 @@ object SyncKeyValueStoreChoreo:
 
   import Request.*
 
-  def app[F[_]: {Sync, Console}](using MultiParty[F]): F[Unit] =
+  def choreo[F[_]: {Sync, Console}](using MultiParty[F]): F[Unit] =
     for
       primaryStorage <- on[Primary](inMemoryKeyValueStore[F, String, String])
       backupStorage <- on[Backup](inMemoryKeyValueStore[F, String, String])
@@ -62,6 +64,7 @@ object SyncKeyValueStoreChoreo:
         for
           store <- take(backupStorage)
           requests <- take(requestsOnBackups)
+          _ <- F.println(s"[Backup] Received ${requests.size} requests: ${requests.mkString(", ")}")
           _ = requests.foreach(request => store process request)
         yield Response.Ack
       _ <- coAnisotropicComm[Backup, Primary](ack)
@@ -97,24 +100,22 @@ object SyncKeyValueStoreChoreo:
         case Request.Put(key, value) => store.put(key, value).map(_ => Response.Ack)
         case Request.Empty           => Response.Empty.pure
 
-import SyncKeyValueStoreChoreo.*
-
 object PrimaryNode extends IOApp.Simple:
   override def run: IO[Unit] =
     val net = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "kvs"))
-    ScalaTropy(app[IO]).projectedOn[Primary](using net)
+    ScalaTropy(SyncKeyValueStore.choreo[IO]).projectedOn[Primary](using net)
 
 object BackupNode extends IOApp.Simple:
   override def run: IO[Unit] =
     val net = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "kvs"))
-    ScalaTropy(app[IO]).projectedOn[Backup](using net)
+    ScalaTropy(SyncKeyValueStore.choreo[IO]).projectedOn[Backup](using net)
 
 object Client1Node extends IOApp.Simple:
   override def run: IO[Unit] =
     val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "kvs"))
-    ScalaTropy(app[IO]).projectedOn[Client](using net)
+    ScalaTropy(SyncKeyValueStore.choreo[IO]).projectedOn[Client](using net)
 
 object Client2Node extends IOApp.Simple:
   override def run: IO[Unit] =
     val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "kvs"))
-    ScalaTropy(app[IO]).projectedOn[Client](using net)
+    ScalaTropy(SyncKeyValueStore.choreo[IO]).projectedOn[Client](using net)

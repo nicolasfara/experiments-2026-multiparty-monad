@@ -23,12 +23,12 @@ object TrianglePingPong:
   type Bob <: { type Tie <: Single[Alice] & Single[Andromeda] }
   type Andromeda <: { type Tie <: Single[Bob] & Single[Alice] }
 
-  def pingPongProgram[F[_]: {Monad, Console, Temporal}](using lang: MultiParty[F]): F[Unit] = for
+  def pingPongProgram[F[_]: {Monad, Console, Temporal}](using MultiParty[F]): F[Unit] = for
     initial <- on[Alice](0.pure)
     _ <- pingPong(initial)
   yield ()
 
-  def pingPong[F[_]: {Monad, Console, Temporal}](initial: Int on Alice)(using lang: MultiParty[F]): F[Unit] = for
+  def pingPong[F[_]: {Monad, Console, Temporal}](initial: Int on Alice)(using MultiParty[F]): F[Unit] = for
     _ <- on[Alice]:
       for
         v <- take(initial)
