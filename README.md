@@ -43,7 +43,7 @@ val mqttConfig = Configuration(appId = "my-app-id", initialWaitWindow = 15.secon
 
 ## Evaluation experiments reproduction
 
-The Message Overhead Analysis (c.f. Section 5.2 of the paper) can be reproduced by running the `RunExperiments.sc` script provided in the root of the repository.
+The Message Overhead Analysis can be reproduced by running the `RunExperiments.sc` script provided in the root of the repository.
 
 ```bash
 ./RunExperiments.sc
