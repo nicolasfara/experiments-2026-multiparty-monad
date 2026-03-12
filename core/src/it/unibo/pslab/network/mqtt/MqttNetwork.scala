@@ -40,10 +40,10 @@ object MqttNetwork:
     val presence = (appId: String) => s"pslab/$appId/presence"
     val inMsgs = (appId: String, tag: PeerTag[?], clientId: String) => s"pslab/$appId/peers/${tag.toString}/$clientId"
 
-  sealed trait NetworkError extends NoStackTrace
-  case class InvalidConfiguration(message: String) extends NetworkError
-  case class NoSuchPeers(tag: PeerTag[?]) extends NetworkError:
-    override def getMessage: String = s"No alive peers of type $tag found"
+  sealed trait NetworkError(message: String) extends NoStackTrace:
+    override def getMessage: String = message
+  case class InvalidConfiguration(message: String) extends NetworkError(message)
+  case class NoSuchPeers(tag: PeerTag[?]) extends NetworkError(s"No alive peers of type $tag found")
 
   def fromEnv[F[_]: {Concurrent, Env, Temporal, Fs2Network, Console, NetworkMonitor}, LP <: Peer: PeerTag](
       config: Configuration,

@@ -1,0 +1,40 @@
+name: Build and check
+
+on:
+  workflow_call:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    name: Build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-24.04]
+        jdk: [17, 21, 25]
+    steps:
+      - &checkout-repo
+        name: Check out repository
+        uses: actions/checkout@v6
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: ${{ matrix.jdk }}
+      - name: Build project
+        run: ./mill __.compile
+      - name: Assemble project
+        run: ./mill examples.assembly
+
+  evaluation:
+    runs-on: ubuntu-24.04
+    needs: build
+    steps:
+      - *checkout-repo
+      - name: Run evaluation
+        run: docker compose up evaluation
