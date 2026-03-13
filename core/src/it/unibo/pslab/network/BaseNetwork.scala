@@ -7,16 +7,26 @@ import it.unibo.pslab.peers.Peers.Peer
 import cats.effect.kernel.{ Concurrent, Deferred, Ref }
 import cats.syntax.all.*
 
+object BaseNetwork:
+  /**
+   * Type alias for a registry of deferred messages awaiting completion.
+   *
+   * Maps (peer address, resource reference) pairs to deferreds containing message payloads. This allows for
+   * synchronization between senders and receivers, regardless of the order in which they arrive.
+   */
+  type IncomingMessages[F[_], PeerAddress] = Map[(PeerAddress, Reference), Deferred[F, Array[Byte]]]
+
+  object IncomingMessages:
+    def empty[F[_], PeerAddress]: IncomingMessages[F, PeerAddress] = Map.empty
+
 /**
  * Base trait providing common functionality for Network implementations.
  */
 trait BaseNetwork[F[_]: {Concurrent, NetworkMonitor}, LP <: Peer, PeerAddress] extends Network[F, LP]:
 
-  /**
-   * Map of incoming messages indexed by sender address and resource reference. Each entry contains a Deferred that will
-   * be completed when the message arrives.
-   */
-  protected val incomingMsgs: Ref[F, Map[(PeerAddress, Reference), Deferred[F, Array[Byte]]]]
+  import BaseNetwork.IncomingMessages
+
+  protected val incomingMsgs: Ref[F, IncomingMessages[F, PeerAddress]]
 
   /**
    * Retrieves an existing deferred for a message from a specific peer and resource, or creates a new one if it doesn't

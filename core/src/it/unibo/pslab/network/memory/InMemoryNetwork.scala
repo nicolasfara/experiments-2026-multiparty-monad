@@ -2,10 +2,11 @@ package it.unibo.pslab.network.memory
 
 import it.unibo.pslab.multiparty.Environment.Reference
 import it.unibo.pslab.network.{ BaseNetwork, Decodable, Encodable, Network, NetworkError, NetworkMonitor, NoSuchPeers }
+import it.unibo.pslab.network.BaseNetwork.IncomingMessages
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.NonEmptyList
-import cats.effect.kernel.{ Concurrent, Deferred, Ref, Resource }
+import cats.effect.kernel.{ Concurrent, Ref, Resource }
 import cats.effect.std.Console
 import cats.syntax.all.*
 
@@ -47,7 +48,7 @@ object InMemoryNetwork:
   ): Resource[F, Network[F, LP]] =
     Resource.make(
       for
-        incomingMsgs <- Ref.of[F, Map[(Address, Reference), Deferred[F, Array[Byte]]]](Map.empty)
+        incomingMsgs <- Ref.of(IncomingMessages.empty[F, Address])
         localAddress = Address(localPeerTag, localId)
         network = new InMemoryNetworkImpl(localAddress, knownPeers, messagesDispatcher, incomingMsgs)
         _ <- messagesDispatcher.register(localAddress, network.asHandle)
@@ -58,7 +59,7 @@ object InMemoryNetwork:
       override val localAddress: Address,
       knownPeers: NonEmptyList[Address],
       messagesDispatcher: MessagesDispatcher[F],
-      protected val incomingMsgs: Ref[F, Map[(Address, Reference), Deferred[F, Array[Byte]]]],
+      protected val incomingMsgs: Ref[F, IncomingMessages[F, Address]],
   ) extends BaseNetwork[F, LP, Address]:
     override type Address[P <: Peer] = InMemoryNetwork.Address
 

@@ -6,6 +6,7 @@ import scala.concurrent.duration.{ DurationLong, FiniteDuration }
 
 import it.unibo.pslab.multiparty.Environment.Reference
 import it.unibo.pslab.network.{ BaseNetwork, Decodable, Encodable, Network, NetworkError, NetworkMonitor, NoSuchPeers }
+import it.unibo.pslab.network.BaseNetwork.IncomingMessages
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.{ NonEmptyList, OptionT }
@@ -66,7 +67,7 @@ object MqttNetwork:
     for
       _ <- Resource.eval(F.println(s"=== Peers startup configuration [wait ${networkConfig.initialWaitWindow}] ==="))
       session <- Session(transportConfig, sessionConfig)
-      incomingMsgs <- Resource.eval(Ref.of(Map.empty[(Address, Reference), Deferred[F, Array[Byte]]]))
+      incomingMsgs <- Resource.eval(Ref.of(IncomingMessages.empty[F, Address]))
       alivePeers <- Resource.eval(Ref.of(Set.empty[Address]))
       started <- Resource.eval(Deferred[F, Unit])
       network = MqttNetworkImpl(networkConfig, session, started, alivePeers, incomingMsgs)
@@ -86,7 +87,7 @@ object MqttNetwork:
       session: Session[F],
       started: Deferred[F, Unit],
       peers: Ref[F, Set[Address]],
-      protected val incomingMsgs: Ref[F, Map[(Address, Reference), Deferred[F, Array[Byte]]]],
+      protected val incomingMsgs: Ref[F, IncomingMessages[F, Address]],
   ) extends BaseNetwork[F, LP, Address]:
     override type Address[P <: Peer] = MqttNetwork.Address
 
