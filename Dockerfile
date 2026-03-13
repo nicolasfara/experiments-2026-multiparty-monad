@@ -24,12 +24,8 @@ ENV PATH="/root/.local/share/coursier/bin:${PATH}"
 
 WORKDIR /app
 
-COPY requirements.txt build.mill ./
+COPY requirements.txt build.mill mill .mill-version ./
 
 RUN python3 -m venv venv && venv/bin/pip install --no-cache-dir -r requirements.txt
-
-COPY . .
-
-RUN chmod +x RunExperiments.sc
 
 CMD ["./RunExperiments.sc"]

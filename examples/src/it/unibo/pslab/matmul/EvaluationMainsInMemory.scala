@@ -7,6 +7,14 @@ import it.unibo.pslab.ScalaTropy
 import it.unibo.pslab.network.NetworkMonitor.withCsvMonitoring
 import it.unibo.pslab.network.memory.InMemoryNetwork
 
+/*
+ * These two main objects run the evaluation of the matmul implementation using both the selective and the broadcasting
+ * communication styles.
+ * 
+ * They are implemented to be run with the in-memory network in order to be able to run a high number of workers
+ * without the overhead of spawning multiple JVMs and IO Apps.
+ */
+
 object MatMulMaster extends IOApp:
   import MatMulMasterWorker.*
 

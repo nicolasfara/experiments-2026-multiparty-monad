@@ -42,7 +42,6 @@ object MatMulMasterWorker:
         for
           m <- take(matrix)
           v <- take(vector)
-          _ <- F.println(s"Matrix:\n${m.show}\nVector: ${v.show}")
           workers <- reachablePeers[Worker]
           allocation <- allocate(m, v) to workers
           message <- anisotropicMessage[Master, Worker](allocation, Task.nil)

@@ -14,4 +14,11 @@ services:
       dockerfile: Dockerfile
     container_name: evaluation
     volumes:
+      # mounts project files into the container via volumes instead of copying them in Dockerfile
+      # to allow to run the most-up-to-date code without rebuilding the image
+      - ./core:/app/core
+      - ./examples:/app/examples
       - ./evaluation:/app/evaluation
+      - ./RunExperiments.sc:/app/RunExperiments.sc
+      - ./requirements.txt:/app/requirements.txt
+      - ./plot_results.py:/app/plot_results.py
