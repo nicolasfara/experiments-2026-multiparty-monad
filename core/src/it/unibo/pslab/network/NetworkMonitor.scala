@@ -16,8 +16,10 @@ object NetworkMonitor:
     override inline def onSend(payload: Array[Byte]): F[Unit] = Applicative[F].unit
     override inline def onReceive(payload: Array[Byte]): F[Unit] = Applicative[F].unit
 
-  def withCsvMonitoring[F[_]: Sync, Result](path: String)(logic: NetworkMonitor[F] ?=> F[Result]): F[Result] =
-    csv(path).use: monitor =>
+  def withCsvMonitoring[F[_]: Sync, Result](path: String)(
+      logic: NetworkMonitor[F] ?=> Resource[F, Result],
+  ): Resource[F, Result] =
+    csv(path).flatMap: monitor =>
       given NetworkMonitor[F] = monitor
       logic
 

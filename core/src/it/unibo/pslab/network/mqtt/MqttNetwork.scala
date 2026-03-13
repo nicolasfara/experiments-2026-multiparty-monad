@@ -3,18 +3,16 @@ package it.unibo.pslab.network.mqtt
 import java.util.UUID
 
 import scala.concurrent.duration.{ DurationLong, FiniteDuration }
-import scala.util.control.NoStackTrace
 
 import it.unibo.pslab.multiparty.Environment.Reference
-import it.unibo.pslab.network.{ Decodable, Encodable, Network, NetworkMonitor }
-import it.unibo.pslab.network.Codable.{ decode, encode }
+import it.unibo.pslab.network.{ BaseNetwork, Decodable, Encodable, Network, NetworkError, NetworkMonitor, NoSuchPeers }
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.{ NonEmptyList, OptionT }
+import cats.effect.implicits.parallelForGenSpawn
 import cats.effect.kernel.{ Concurrent, Deferred, Ref, Resource, Temporal }
 import cats.effect.std.{ Console, Env }
 import cats.effect.syntax.all.*
-import cats.effect.implicits.parallelForGenSpawn
 import cats.syntax.all.*
 import com.comcast.ip4s.{ host, port, Host, Port }
 import fs2.io.net.Network as Fs2Network
@@ -40,10 +38,7 @@ object MqttNetwork:
     val presence = (appId: String) => s"pslab/$appId/presence"
     val inMsgs = (appId: String, tag: PeerTag[?], clientId: String) => s"pslab/$appId/peers/${tag.toString}/$clientId"
 
-  sealed trait NetworkError(message: String) extends NoStackTrace:
-    override def getMessage: String = message
   case class InvalidConfiguration(message: String) extends NetworkError(message)
-  case class NoSuchPeers(tag: PeerTag[?]) extends NetworkError(s"No alive peers of type $tag found")
 
   def fromEnv[F[_]: {Concurrent, Env, Temporal, Fs2Network, Console, NetworkMonitor}, LP <: Peer: PeerTag](
       config: Configuration,
@@ -55,7 +50,7 @@ object MqttNetwork:
     for
       (host, port) <- Resource.eval:
         (env("MQTT_BROKER_HOST", Host.fromString), env("MQTT_BROKER_PORT", Port.fromString)).parTupled
-      network <- make(config, TransportConfig(host, port), SessionConfig(config.clientId, cleanSession = true))
+      network <- make(config, TransportConfig(host, port), SessionConfig(config.clientId, cleanSession = false))
     yield network
 
   def localBroker[F[_]: {Concurrent, Temporal, Fs2Network, Console, NetworkMonitor}, LP <: Peer: PeerTag](
@@ -74,7 +69,7 @@ object MqttNetwork:
       incomingMsgs <- Resource.eval(Ref.of(Map.empty[(Address, Reference), Deferred[F, Array[Byte]]]))
       alivePeers <- Resource.eval(Ref.of(Set.empty[Address]))
       started <- Resource.eval(Deferred[F, Unit])
-      network = MqttNetworkImpl(networkConfig, session, started, incomingMsgs, alivePeers)
+      network = MqttNetworkImpl(networkConfig, session, started, alivePeers, incomingMsgs)
       _ <- Resource.eval(network.subscribe)
       _ <- network.handleIncomingMessage.background
       _ <- network.publishPresenceUntilStart.background
@@ -84,15 +79,15 @@ object MqttNetwork:
     yield network
 
   private class MqttNetworkImpl[
-      F[_]: {Concurrent, Temporal, Fs2Network, Console, NetworkMonitor},
+      F[_]: {Concurrent, Temporal, Fs2Network, NetworkMonitor},
       LP <: Peer: PeerTag as localPeerTag,
   ](
       networkConfig: Configuration,
       session: Session[F],
       started: Deferred[F, Unit],
-      peersMessages: Ref[F, Map[(Address, Reference), Deferred[F, Array[Byte]]]],
       peers: Ref[F, Set[Address]],
-  ) extends Network[F, LP]:
+      protected val incomingMsgs: Ref[F, Map[(Address, Reference), Deferred[F, Array[Byte]]]],
+  ) extends BaseNetwork[F, LP, Address]:
     override type Address[P <: Peer] = MqttNetwork.Address
 
     val startTopic = Topics.start(networkConfig.appId)
@@ -143,25 +138,13 @@ object MqttNetwork:
 
     override def send[V: Encodable[F], To <: Peer: PeerTag](value: V, resource: Reference, to: Address[To]): F[Unit] =
       for
-        encodedValue <- encode(value).flatTap(F.onSend)
+        encodedValue <- encodeAndTrack(value)
         payload = upickle.writeBinary((localAddress, resource, encodedValue))
         _ <- session.publish(Topics.inMsgs(networkConfig.appId, to.tag, to.clientId), payload, AtLeastOnce)
       yield ()
 
     override def receive[V: Decodable[F], From <: Peer: PeerTag](resource: Reference, from: Address[From]): F[V] =
-      for
-        toWaitOn <- takePeerMsgOrDefer((from, resource))
-        data <- toWaitOn.get.flatTap(F.onReceive).flatMap(decode)
-      yield data
-
-    private def takePeerMsgOrDefer(key: (Address[?], Reference)) =
-      for
-        d <- Deferred[F, Array[Byte]]
-        res <- peersMessages.modify: m =>
-          m.get(key) match
-            case Some(found) => (m - key, found)
-            case None        => (m.updated(key, d), d)
-      yield res
+      receiveImpl(resource, from)
 
   private given Conversion[Array[Byte], Vector[Byte]] = _.toVector
   private given Conversion[Vector[Byte], Array[Byte]] = _.toArray

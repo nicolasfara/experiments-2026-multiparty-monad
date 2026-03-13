@@ -1,21 +1,14 @@
 package it.unibo.pslab.matmul
 
-import scala.concurrent.duration.DurationInt
-
-import it.unibo.pslab.ScalaTropy
 import it.unibo.pslab.UpickleCodable.given
 import it.unibo.pslab.matmul.{ Matrix, Vec, VecChunk }
 import it.unibo.pslab.matmul.LinearAlgebra.*
 import it.unibo.pslab.multiparty.MultiParty
 import it.unibo.pslab.multiparty.MultiParty.*
-import it.unibo.pslab.network.NetworkMonitor.withCsvMonitoring
-import it.unibo.pslab.network.mqtt.MqttNetwork
-import it.unibo.pslab.network.mqtt.MqttNetwork.Configuration
 import it.unibo.pslab.peers.Peers.Quantifier.*
 
 import cats.{ Monad, MonadThrow }
 import cats.data.NonEmptyList
-import cats.effect.{ ExitCode, IO, IOApp }
 import cats.effect.std.Console
 import cats.syntax.all.*
 import upickle.default.ReadWriter
@@ -82,24 +75,3 @@ object BroadcastBasedMatMulMasterWorker:
           .toList
           .toMap
           .pure
-
-trait InefficientMatMulMqttConfig:
-  val mqttConfig = Configuration(
-    appId = "broadcast-matmul-master-worker",
-    // give plenty of time to avoid experiments with many (blocking) workers do not connect in time
-    initialWaitWindow = 20.seconds,
-  )
-
-object InefficientMatMulMaster extends IOApp with InefficientMatMulMqttConfig:
-  override def run(args: List[String]): IO[ExitCode] =
-    args.headOption match
-      case Some(label) =>
-        withCsvMonitoring(s"evaluation/broadcasting-experiment-$label.csv"):
-          val mqttNetwork = MqttNetwork.fromEnv[IO, Master](mqttConfig)
-          ScalaTropy(matmul[IO]).projectedOn[Master](using mqttNetwork).as(ExitCode.Success)
-      case None => IO.println("Usage: InefficientMatMulMaster <label>").as(ExitCode.Error)
-
-object InefficientMatMulWorker extends IOApp.Simple with InefficientMatMulMqttConfig:
-  override def run: IO[Unit] =
-    val mqttNetwork = MqttNetwork.fromEnv[IO, Worker](mqttConfig)
-    ScalaTropy(matmul[IO]).projectedOn[Worker](using mqttNetwork)
