@@ -60,27 +60,24 @@ object TrianglePingPongApp extends IOApp.Simple:
 
 object Bob extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Bob](Configuration(appId = "triangle-pingpong"))
-      .use: mqttNet =>
-        ScalaTropy(pingPongProgram[IO]).projectedOn[Bob]:
-          tiedTo[Alice] via mqttNet
-          tiedTo[Andromeda] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Bob](Configuration(appId = "3-ping-pong"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(pingPongProgram[IO]).projectedOn[Bob]:
+        tiedTo[Alice] via mqtt
+        tiedTo[Andromeda] via mqtt
 
 object Andromeda extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Andromeda](Configuration(appId = "triangle-pingpong"))
-      .use: mqttNet =>
-        ScalaTropy(pingPongProgram[IO]).projectedOn[Andromeda]:
-          tiedTo[Alice] via mqttNet
-          tiedTo[Bob] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Andromeda](Configuration(appId = "3-ping-pong"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(pingPongProgram[IO]).projectedOn[Andromeda]:
+        tiedTo[Alice] via mqtt
+        tiedTo[Bob] via mqtt
 
 object Alice extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Alice](Configuration(appId = "triangle-pingpong"))
-      .use: mqttNet =>
-        ScalaTropy(pingPongProgram[IO]).projectedOn[Alice]:
-          tiedTo[Bob] via mqttNet
-          tiedTo[Andromeda] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Alice](Configuration(appId = "3-ping-pong"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(pingPongProgram[IO]).projectedOn[Alice]:
+        tiedTo[Bob] via mqtt
+        tiedTo[Andromeda] via mqtt

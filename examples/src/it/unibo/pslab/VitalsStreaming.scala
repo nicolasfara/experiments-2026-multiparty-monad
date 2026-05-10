@@ -75,40 +75,36 @@ object VitalsStreaming:
 object LauchAll extends IOApp.Simple:
   override def run: IO[Unit] =
     List(
-      VitalsGathererV2.run,
-      VitalsDeviceAliceV2.run,
-      VitalsDeviceBobV2.run,
-      VitalsDeviceCarolV2.run,
+      VitalsGatherer.run,
+      VitalsDeviceAlice.run,
+      VitalsDeviceBob.run,
+      VitalsDeviceCarol.run,
     ).parSequence.void
 
-object VitalsGathererV2 extends IOApp.Simple:
+object VitalsGatherer extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Gatherer](Configuration(appId = "vitals-streaming-v2"))
-      .use: mqttNet =>
-        ScalaTropy(vitalsStreamingProgram[IO](Nil)).projectedOn[Gatherer]:
-          tiedTo[Device] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Gatherer](Configuration(appId = "vitals-streaming"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(vitalsStreamingProgram[IO](Nil)).projectedOn[Gatherer]:
+        tiedTo[Device] via mqtt
 
-object VitalsDeviceAliceV2 extends IOApp.Simple:
+object VitalsDeviceAlice extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Device](Configuration(appId = "vitals-streaming-v2"))
-      .use: mqttNet =>
-        ScalaTropy(vitalsStreamingProgram[IO](aliceScript)).projectedOn[Device]:
-          tiedTo[Gatherer] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Device](Configuration(appId = "vitals-streaming"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(vitalsStreamingProgram[IO](aliceScript)).projectedOn[Device]:
+        tiedTo[Gatherer] via mqtt
 
-object VitalsDeviceBobV2 extends IOApp.Simple:
+object VitalsDeviceBob extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Device](Configuration(appId = "vitals-streaming-v2"))
-      .use: mqttNet =>
-        ScalaTropy(vitalsStreamingProgram[IO](bobScript)).projectedOn[Device]:
-          tiedTo[Gatherer] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Device](Configuration(appId = "vitals-streaming"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(vitalsStreamingProgram[IO](bobScript)).projectedOn[Device]:
+        tiedTo[Gatherer] via mqtt
 
-object VitalsDeviceCarolV2 extends IOApp.Simple:
+object VitalsDeviceCarol extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Device](Configuration(appId = "vitals-streaming-v2"))
-      .use: mqttNet =>
-        ScalaTropy(vitalsStreamingProgram[IO](carolScript)).projectedOn[Device]:
-          tiedTo[Gatherer] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Device](Configuration(appId = "vitals-streaming"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(vitalsStreamingProgram[IO](carolScript)).projectedOn[Device]:
+        tiedTo[Gatherer] via mqtt

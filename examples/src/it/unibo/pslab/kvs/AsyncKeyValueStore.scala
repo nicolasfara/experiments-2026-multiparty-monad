@@ -56,7 +56,7 @@ object AsyncKeyValueStore:
 
   type BackupHandler[F[_]] = MultiParty[F] ?=> List[Request.Put] on Backup => F[Unit]
 
-  def main[F[_]: {Async, Console, Temporal}](using lang: MultiParty[F]): F[Unit] =
+  def app[F[_]: {Async, Console, Temporal}](using lang: MultiParty[F]): F[Unit] =
     for
       q <- on[Primary](Queue.unbounded[F, Request.Put])
       app = Choreo[F](q)
@@ -143,31 +143,29 @@ object AsyncKeyValueStoreApp extends IOApp.Simple:
 
 object AsyncPrimaryNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "async-kvs"))
-    net.use: net =>
-      ScalaTropy(AsyncKeyValueStore.main[IO]).projectedOn[Primary]:
-        tiedTo[Backup] via net
-        tiedTo[Client] via net
+    val mqttNetwork = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "async-kvs"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(AsyncKeyValueStore.app[IO]).projectedOn[Primary]:
+        tiedTo[Backup] via mqtt
+        tiedTo[Client] via mqtt
 
 object AsyncBackupNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "async-kvs"))
-    net.use: net =>
-      ScalaTropy(AsyncKeyValueStore.main[IO]).projectedOn[Backup]:
-        tiedTo[Primary] via net
+    val mqttNetwork = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "async-kvs"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(AsyncKeyValueStore.app[IO]).projectedOn[Backup]:
+        tiedTo[Primary] via mqtt
 
 object AsyncClient1Node extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork
-      .localBroker[IO, Client](Configuration(appId = "async-kvs"))
-    net.use: net =>
-      ScalaTropy(AsyncKeyValueStore.main[IO]).projectedOn[Client]:
-        tiedTo[Primary] via net
+    val mqttNetwork = MqttNetwork.localBroker[IO, Client](Configuration(appId = "async-kvs"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(AsyncKeyValueStore.app[IO]).projectedOn[Client]:
+        tiedTo[Primary] via mqtt
 
 object AsyncClient2Node extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork
-      .localBroker[IO, Client](Configuration(appId = "async-kvs"))
-    net.use: net =>
-      ScalaTropy(AsyncKeyValueStore.main[IO]).projectedOn[Client]:
-        tiedTo[Primary] via net
+    val mqttNetwork = MqttNetwork.localBroker[IO, Client](Configuration(appId = "async-kvs"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(AsyncKeyValueStore.app[IO]).projectedOn[Client]:
+        tiedTo[Primary] via mqtt

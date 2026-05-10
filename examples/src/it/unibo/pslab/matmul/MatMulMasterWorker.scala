@@ -94,13 +94,12 @@ object MatMulApp extends IOApp:
   def master(label: String): IO[Unit] =
     withCsvMonitoring(s"evaluation/selective-experiment-$label.csv"):
       MqttNetwork.fromEnv[IO, Master](Configuration(appId = "matmul"))
-    .use: mqttNet =>
+    .use: mqtt =>
       ScalaTropy(matmul[IO]).projectedOn[Master]:
-        tiedTo[Worker] via mqttNet
+        tiedTo[Worker] via mqtt
 
   def worker: IO[Unit] =
-    MqttNetwork
-      .fromEnv[IO, Worker](Configuration(appId = "matmul"))
-      .use: mqttNet =>
-        ScalaTropy(matmul[IO]).projectedOn[Worker]:
-          tiedTo[Master] via mqttNet
+    val mqttNetwork = MqttNetwork.fromEnv[IO, Worker](Configuration(appId = "matmul"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(matmul[IO]).projectedOn[Worker]:
+        tiedTo[Master] via mqtt

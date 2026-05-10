@@ -52,16 +52,14 @@ object PingPongApp extends IOApp.Simple:
 
 object Pinger extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Pinger](Configuration(appId = "pingpong"))
-      .use: mqttNet =>
-        ScalaTropy(pingPongProgram[IO]).projectedOn[Pinger]:
-          tiedTo[Ponger] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Pinger](Configuration(appId = "ping-pong"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(pingPongProgram[IO]).projectedOn[Pinger]:
+        tiedTo[Ponger] via mqtt
 
 object Ponger extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Ponger](Configuration(appId = "pingpong"))
-      .use: mqttNet =>
-        ScalaTropy(pingPongProgram[IO]).projectedOn[Ponger]:
-          tiedTo[Pinger] via mqttNet
+    val mqttNetwork = MqttNetwork.localBroker[IO, Ponger](Configuration(appId = "ping-pong"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(pingPongProgram[IO]).projectedOn[Ponger]:
+        tiedTo[Pinger] via mqtt

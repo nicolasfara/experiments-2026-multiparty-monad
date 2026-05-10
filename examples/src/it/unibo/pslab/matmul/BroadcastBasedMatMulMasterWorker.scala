@@ -100,8 +100,7 @@ object InefficientMatMulApp extends IOApp:
         tiedTo[Worker] via mqttNet
 
   def worker: IO[Unit] =
-    MqttNetwork
-      .fromEnv[IO, Worker](Configuration(appId = "matmul"))
-      .use: mqttNet =>
-        ScalaTropy(matmul[IO]).projectedOn[Worker]:
-          tiedTo[Master] via mqttNet
+    val mqttNetwork = MqttNetwork.fromEnv[IO, Worker](Configuration(appId = "matmul"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(matmul[IO]).projectedOn[Worker]:
+        tiedTo[Master] via mqtt

@@ -53,24 +53,21 @@ object MasterWorkerApp extends IOApp.Simple:
 
 object MasterServer extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Master](Configuration(appId = "masterworker"))
-      .use: mqttNetwork =>
-        ScalaTropy(masterWorkerProgram[IO]).projectedOn[Master]:
-          tiedTo[Worker] via mqttNetwork
+    val mqttNetwork = MqttNetwork.localBroker[IO, Master](Configuration(appId = "masterworker"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(masterWorkerProgram[IO]).projectedOn[Master]:
+        tiedTo[Worker] via mqtt
 
 object Worker1 extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Worker](Configuration(appId = "masterworker"))
-      .use: mqttNetwork =>
-        ScalaTropy(masterWorkerProgram[IO]).projectedOn[Worker]:
-          tiedTo[Master] via mqttNetwork
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "masterworker"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(masterWorkerProgram[IO]).projectedOn[Worker]:
+        tiedTo[Master] via mqtt
 
 object Worker2 extends IOApp.Simple:
   override def run: IO[Unit] =
-    MqttNetwork
-      .localBroker[IO, Worker](Configuration(appId = "masterworker"))
-      .use: mqttNetwork =>
-        ScalaTropy(masterWorkerProgram[IO]).projectedOn[Worker]:
-          tiedTo[Master] via mqttNetwork
+    val mqttNetwork = MqttNetwork.localBroker[IO, Worker](Configuration(appId = "masterworker"))
+    mqttNetwork.use: mqtt =>
+      ScalaTropy(masterWorkerProgram[IO]).projectedOn[Worker]:
+        tiedTo[Master] via mqtt

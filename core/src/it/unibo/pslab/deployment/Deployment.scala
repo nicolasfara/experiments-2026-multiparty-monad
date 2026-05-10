@@ -33,9 +33,7 @@ object Deployment:
      * Define a connection between the local projected peer and a remote peer type which is tied to by the architectural
      * specification.
      */
-    def tiedTo[Remote <: Peer: PeerTag](using
-        remoteTag: PeerTag[Remote],
-    )(using Local <:< TiedTo[Remote]): Connection[Remote] = remoteTag
+    def tiedTo[Remote <: Peer: PeerTag as remoteTag](using Local <:< TiedTo[Remote]): Connection[Remote] = remoteTag
 
     extension [Remote <: Peer: PeerTag as remoteTag](rc: Connection[Remote])
 

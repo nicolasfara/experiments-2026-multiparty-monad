@@ -125,22 +125,22 @@ object ModularSyncKeyValueStoreApp extends IOApp.Simple:
 
 object ModularPrimaryNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "modular-kvs"))
-    net.use: mqttNetwork =>
+    val mqttNetwork = MqttNetwork.localBroker[IO, Primary](Configuration(appId = "modular-kvs"))
+    mqttNetwork.use: mqtt =>
       ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Primary]:
-        tiedTo[Backup] via mqttNetwork
-        tiedTo[Client] via mqttNetwork
+        tiedTo[Backup] via mqtt
+        tiedTo[Client] via mqtt
 
 object ModularBackupNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "modular-kvs"))
-    net.use: mqttNetwork =>
+    val mqttNetwork = MqttNetwork.localBroker[IO, Backup](Configuration(appId = "modular-kvs"))
+    mqttNetwork.use: mqtt =>
       ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Backup]:
-        tiedTo[Primary] via mqttNetwork
+        tiedTo[Primary] via mqtt
 
 object ModularClientNode extends IOApp.Simple:
   override def run: IO[Unit] =
-    val net = MqttNetwork.localBroker[IO, Client](Configuration(appId = "modular-kvs"))
-    net.use: mqttNetwork =>
+    val mqttNetwork = MqttNetwork.localBroker[IO, Client](Configuration(appId = "modular-kvs"))
+    mqttNetwork.use: mqtt =>
       ScalaTropy(ModularSyncKeyValueStore.choreo[IO]).projectedOn[Client]:
-        tiedTo[Primary] via mqttNetwork
+        tiedTo[Primary] via mqtt
