@@ -140,7 +140,7 @@ object MultiParty:
       def on[Local <: Peer](using local: PeerTag[Local])[V](body: (Label[Local]) ?=> F[V]): F[V on Local] =
         given Label[Local] = new Label[Local] {}
         val resourceF = env.provide(local)
-        if runtimePeer == local then (resourceF, body).mapN(Placement.Local[V, Local].apply)
+        if runtimePeer <:< local then (resourceF, body).mapN(Placement.Local[V, Local].apply)
         else resourceF.map(Placement.Remote[V, Local].apply)
 
       def take[Local <: Peer](using Label[Local])[V](placed: V on Local): F[V] =
@@ -244,9 +244,9 @@ object MultiParty:
       def foldRuntimePeer[From <: Peer: PeerTag as sourcePeer, To <: Peer: PeerTag as targetPeer](using
           matchingProtocol: CommunicationProtocolCompliance[From, To],
       )[Result](ifLocal: Handler[Result])(ifRemote: Handler[Result])(default: => F[Result]): F[Result] =
-        val remotePeer = if runtimePeer == sourcePeer then targetPeer else sourcePeer
-        if runtimePeer == sourcePeer then ifLocal(networkOf(remotePeer))
-        else if runtimePeer == targetPeer then ifRemote(networkOf(sourcePeer))
+        val remotePeer = if runtimePeer <:< sourcePeer then targetPeer else sourcePeer
+        if runtimePeer <:< sourcePeer then ifLocal(networkOf(remotePeer))
+        else if runtimePeer <:< targetPeer then ifRemote(networkOf(sourcePeer))
         else default
 
       def networkOf(peer: PeerTag[?]) =
