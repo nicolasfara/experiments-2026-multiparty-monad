@@ -123,6 +123,7 @@ object Peers:
         //              v   refinement parent type   Tie lower bound
         //              v             v                    v
         case TypeBounds(_, Refinement(_, "Tie", TypeBounds(_, upperBound))) => flattenAnd(upperBound)
+        case TypeBounds(_, upperBound) if upperBound <:< TypeRepr.of[Peer] => extractTies(upperBound)
         case other => report.errorAndAbort(s"Expected type X <: { type Tie <: ... }, got: ${other.show}")
 
     def extractCommAndPeer(tpe: TypeRepr): (TypeRepr, TypeRepr) =
