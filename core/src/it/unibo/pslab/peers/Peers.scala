@@ -8,26 +8,49 @@ import it.unibo.pslab.network.CommunicationProtocol
 import upickle.default.{ readwriter, ReadWriter }
 
 object Peers:
-
   sealed trait PeerTag[-P <: Peer]
 
-  type Peer = { type Tie }
+  extension [P <: Peer](peerRepr: PeerTag[P])
+    def baseTypeRepr: String = peerRepr.asInstanceOf[PeerReprImpl[P]].baseTypeRepr
+    infix def <:<[R <: Peer](base: PeerTag[R]): Boolean =
+      peerRepr.baseTypeRepr == base.baseTypeRepr || peerRepr.asInstanceOf[PeerReprImpl[P]].supertypes.contains(base.baseTypeRepr)
 
-  private case class PeerTagImpl[-P <: Peer](fqn: String) extends PeerTag[P]:
-    override def toString: String = fqn
+  private final case class PeerReprImpl[-P <: Peer](baseTypeRepr: String, supertypes: List[String]) extends PeerTag[P]:
+    override def toString: String = s"'$baseTypeRepr'${supertypes.mkString(" <: '", ", ", "'")}"
 
-  given [P <: Peer] => ReadWriter[PeerTag[P]] = readwriter[String].bimap[PeerTag[P]](
-    { case PeerTagImpl(fqn) => fqn },
-    PeerTagImpl.apply,
+  given [P <: Peer] => ReadWriter[PeerTag[P]] = readwriter[(String, List[String])].bimap(
+    { case PeerReprImpl(base, superTypes) => (base, superTypes) },
+    (base, superTypes) => PeerReprImpl(base, superTypes),
   )
 
-  inline given syntesizePeerTag[P <: Peer]: PeerTag[P] = ${ syntesizePeerTagImpl[P] }
+  inline given syntesizePeerTag[P <: Peer]: PeerTag[P] = ${ peerReprImpl[P] }
 
-  private def syntesizePeerTagImpl[P <: Peer: Type](using quotes: Quotes): Expr[PeerTag[P]] =
+  private def peerReprImpl[T <: Peer : Type](using quotes: Quotes): Expr[PeerTag[T]] =
     import quotes.reflect.*
-    val tpe = TypeRepr.of[P]
-    val fqn = tpe.typeSymbol.fullName
-    '{ PeerTagImpl[P](${ Expr(fqn) }) }
+
+    def collectBasesOfType(tpe: TypeRepr): List[Symbol] =
+      tpe match
+        case Refinement(parent, _, _) =>
+          collectBasesOfType(parent)
+        case AndType(left, right) =>
+          collectBasesOfType(left) ++ collectBasesOfType(right)
+        case _ if tpe.typeSymbol.exists =>
+          collectBasesOfSymbol(tpe.typeSymbol)
+        case _ =>
+          List.empty
+
+    def collectBasesOfSymbol(symbol: Symbol): List[Symbol] =
+      symbol.info match
+        case TypeBounds(_, hi) =>
+          symbol :: collectBasesOfType(hi)
+        case _ =>
+          List.empty
+
+    val types = collectBasesOfSymbol(TypeRepr.of[T].typeSymbol).map(_.fullName)
+    '{ PeerReprImpl(${ Expr(types.head) }, ${ Expr(types.tail) }) }
+  end peerReprImpl
+
+  type Peer = { type Tie }
 
   enum Quantifier[P <: Peer, Comm <: CommunicationProtocol]:
     case SingleLink()
