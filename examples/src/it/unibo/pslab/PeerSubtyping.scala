@@ -12,10 +12,8 @@ import it.unibo.pslab.peers.Peers.*
 
 import cats.MonadThrow
 import cats.effect.{ IO, IOApp }
-import cats.effect.std.Console
+import cats.effect.std.{ Console, Random }
 import cats.syntax.all.*
-import cats.effect.std.Random
-import it.unibo.pslab.peers.Peers.syntesizePeerTag
 
 object PeerSubtyping:
   type Device <: { type Tie <: via[AnyProtocol toSingle Server] }
