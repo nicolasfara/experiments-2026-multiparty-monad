@@ -1,12 +1,8 @@
 package it.unibo.pslab.network.ws
 
-import java.net.InetAddress
-
-import it.unibo.pslab.multiparty.Environment.Reference
 import it.unibo.pslab.network.{
+  ScalaTropyMessage,
   BaseNetwork,
-  Decodable,
-  Encodable,
   Network,
   NetworkMonitor,
   NoSuchPeers,
@@ -18,71 +14,71 @@ import it.unibo.pslab.network.BaseNetwork.IncomingMessages
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.NonEmptyList
-import cats.effect.kernel.{ Concurrent, Ref }
+import cats.effect.{ Async, Concurrent, Ref }
 import cats.effect.std.Queue
 import cats.syntax.all.*
-import fs2.{ Pipe, Stream }
+import cats.effect.syntax.all.*
 import sttp.ws.WebSocketFrame
+import org.http4s.ember.server.EmberServerBuilder
+import com.comcast.ip4s.Host
+import com.comcast.ip4s.Port
+import fs2.io.net.Network as Fs2Network
 
 trait WebSocketNetwork[F[_], LP <: Peer] extends Network[F, LP, PeerRef], WS
 
 object WebSocketNetwork:
 
+  def make[F[_]: {Async, Concurrent, Fs2Network, NetworkMonitor}, LP <: Peer: PeerTag as localPeer](
+      ipv4Address: String,
+      port: Int,
+      knownPeers: Set[PeerRef[?]],
+  ): F[WebSocketNetwork[F, LP]] =
+    for
+      alivePeers <- Ref.of[F, Map[PeerId, Queue[F, WebSocketFrame]]](Map.empty)
+      connectedPeers <- Ref.of[F, Set[PeerRef[?]]](knownPeers)
+      incomingMsgs <- Ref.of[F, IncomingMessages[F, PeerRef[?]]](IncomingMessages.empty)
+      impl = WebSocketNetworkImpl(ipv4Address, port, connectedPeers, alivePeers, incomingMsgs)
+      _ <- EmberServerBuilder
+        .default[F]
+        .withHost(Host.fromString(ipv4Address).get) // TODO: handle invalid address
+        .withPort(Port.fromInt(port).get) // TODO: handle invalid port
+        .withHttpWebSocketApp(impl.setup(_).orNotFound)
+        .build
+        .useForever
+        .start
+    yield impl
+
   private class WebSocketNetworkImpl[
-      F[_]: {Concurrent, NetworkMonitor},
+      F[_]: {Async, Concurrent, NetworkMonitor},
       LP <: Peer: PeerTag as localPeer,
   ](
-      alivePeers: Ref[F, Map[PeerRef[?], Queue[F, WebSocketFrame]]],
+      ipv4Address: String,
+      port: Int,
+      connectedPeers: Ref[F, Set[PeerRef[?]]],
+      protected val alivePeers: Ref[F, Map[PeerId, Queue[F, WebSocketFrame]]],
       protected val incomingMsgs: Ref[F, IncomingMessages[F, PeerRef[?]]],
-  ) extends WebSocketNetwork[F, LP]
-      with BaseNetwork[F, LP]:
+  ) extends WebSocketNetwork[F, LP],
+        WebSocketAcceptor[F],
+        WebSocketConnector[F],
+        BaseNetwork[F, LP]:
 
-    override val local: PeerRef[LP] = PeerId(localPeer, InetAddress.getLocalHost.getHostAddress())
-
-    private def connectToPeer(peer: PeerRef[?], url: String): F[Unit] =
-      for
-        q <- Queue.unbounded[F, WebSocketFrame]
-        _ <- alivePeers.update(_ + (peer -> q))
-        pipe: Pipe[F, WebSocketFrame.Data[?], WebSocketFrame] = incoming =>
-          val incomingHandler = incoming.evalMap:
-            case WebSocketFrame.Text(payload, true, _)   => onApplicationMsg(payload.getBytes)
-            case WebSocketFrame.Binary(payload, true, _) => onApplicationMsg(payload)
-            case _ => F.unit // TODO: gracefully handle this case that shouldn't happen in our protocol
-          Stream.repeatEval(q.take).concurrently(incomingHandler)
-        _ <- openConnection(url, pipe)
-      yield ()
-
-    private def openConnection(url: String, pipe: Pipe[F, WebSocketFrame.Data[?], WebSocketFrame]): F[Unit] =
-      ???
-
-    private def onApplicationMsg(data: Array[Byte]): F[Unit] =
-      for
-        (address, resource, payload) <- F.catchNonFatal(upickle.readBinary[(PeerRef[?], Reference, Array[Byte])](data))
-        d <- takePeerMsgOrDefer((address, resource))
-        _ <- d.complete(payload)
-      yield ()
+    override val local: PeerRef[LP] = PeerId(localPeer, s"ws://${ipv4Address}:${port}/ws")
 
     override def alivePeersOf[RP <: Peer: PeerTag as remotePeer]: F[NonEmptyList[PeerId]] =
-      // TODO: this is equal to the alivePeersOf in MQTT... refactor to avoid code duplication
-      alivePeers.get.flatMap: peers =>
-        val filtered = peers.keys.filter(_.tag <:< remotePeer)
+      connectedPeers.get.flatMap: peers =>
+        val filtered = peers.filter(_.tag <:< remotePeer)
         NonEmptyList.fromList(filtered.toList) match
           case Some(nel) => nel.pure
           case None      => Concurrent[F].raiseError(NoSuchPeers(remotePeer))
 
-    override def receive[V: Decodable[F], From <: Peer: PeerTag](resource: Reference, from: PeerRef[From]): F[V] =
-      receiveImpl(resource, from)
+    override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
+      emit[To, ScalaTropyMessage](to, message)
 
-    override def send[V: Encodable[F], To <: Peer: PeerTag as targetPeerTag](
-        value: V,
-        resource: Reference,
-        to: PeerRef[To],
-    ): F[Unit] =
+    override def onMessage(payload: Array[Byte]): F[Unit] =
       for
-        encodedValue <- encodeAndTrack(value)
-        payload = upickle.writeBinary((local, resource, encodedValue))
-        _ <- alivePeers.get.flatMap: peers =>
-          peers.get(to) match
-            case Some(queue) => queue.offer(WebSocketFrame.binary(payload))
-            case None        => Concurrent[F].raiseError(NoSuchPeers(targetPeerTag))
+        ScalaTropyMessage(address, resource, data) <- F.catchNonFatal(upickle.readBinary[ScalaTropyMessage](payload))
+        d <- takePeerMsgOrDefer((address, resource))
+        _ <- d.complete(data)
       yield ()
+  end WebSocketNetworkImpl
+end WebSocketNetwork

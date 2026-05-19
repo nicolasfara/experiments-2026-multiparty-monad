@@ -44,6 +44,7 @@ trait CommonTests extends TestModule.ScalaTest {
 trait CommonJvmTests extends CommonTests {
   override def mvnDeps = super.mvnDeps() ++ Seq(
     mvn"org.scalamock::scalamock::7.5.5",
+    mvn"org.typelevel::cats-effect-testing-scalatest:1.8.0",
   )
 }
 
