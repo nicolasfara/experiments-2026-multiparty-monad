@@ -8,7 +8,7 @@ import it.unibo.pslab.network.{
   PeerId,
   PeerRef,
   ScalaTropyMessage,
-  WS,
+  WebSocket,
 }
 import it.unibo.pslab.network.BaseNetwork.IncomingMessages
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
@@ -25,7 +25,7 @@ import sttp.capabilities.fs2.Fs2Streams
 import sttp.client4.WebSocketStreamBackend
 import sttp.client4.httpclient.fs2.HttpClientFs2Backend
 
-trait WebSocketNetwork[F[_], LP <: Peer] extends Network[F, LP, PeerRef], WS
+trait WebSocketNetwork[F[_], LP <: Peer] extends Network[F, LP, PeerRef], WebSocket
 
 object WebSocketNetwork:
 
