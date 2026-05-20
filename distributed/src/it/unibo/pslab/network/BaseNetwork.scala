@@ -37,7 +37,6 @@ object BaseNetwork:
 
   object IncomingMessages:
     def empty[F[_], Id]: IncomingMessages[F, Id] = Map.empty
-end BaseNetwork
 
 /**
  * Base trait providing common functionality for Network implementations.
@@ -83,5 +82,3 @@ trait BaseNetwork[F[_]: {Concurrent, NetworkMonitor as monitor}, LP <: Peer] ext
 
   /** Low-level dispatch method to send the given application message to the specified peer. */
   def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit]
-
-end BaseNetwork

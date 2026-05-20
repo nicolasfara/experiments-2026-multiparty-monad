@@ -84,5 +84,3 @@ object InMemoryNetwork:
           existing <- takePeerMsgOrDefer((from, resource))
           _ <- existing.complete(payload)
         yield ()
-  end InMemoryNetworkImpl
-end InMemoryNetwork
