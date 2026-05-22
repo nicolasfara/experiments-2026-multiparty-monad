@@ -29,6 +29,7 @@ import fs2.io.net.Network as Fs2Network
 import net.sigusr.mqtt.api.{ Message, Session, SessionConfig, TransportConfig }
 import net.sigusr.mqtt.api.QualityOfService.AtLeastOnce
 import upickle.default as upickle
+import it.unibo.pslab.network.NoPeers
 
 trait MqttNetwork[F[_], LP <: Peer] extends Network[F, LP, PeerRef], MQTT
 
@@ -144,6 +145,12 @@ object MqttNetwork:
           case Some(nel) => nel.pure
           case None      => Concurrent[F].raiseError(NoSuchPeers(remotePeerTag, localPeerTag))
 
+    override def alivePeers[UP <: Peer]: F[NonEmptyList[PeerRef[UP]]] = 
+       peers.get.flatMap: peers =>
+        NonEmptyList.fromList(peers.toList) match
+          case Some(nel) => nel.pure
+          case None      => Concurrent[F].raiseError(NoPeers())
+      
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
       for
         payload <- F.catchNonFatal(upickle.writeBinary(message))

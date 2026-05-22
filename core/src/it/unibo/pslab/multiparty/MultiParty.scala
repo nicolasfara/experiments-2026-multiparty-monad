@@ -27,6 +27,8 @@ trait MultiParty[F[_]: Monad]:
       Label[Local],
   )[V](placed: Anisotropic[RP, V] on Local): F[Map[Remote[RP], V]]
 
+  def select[P <: Peer](using PeerTag[P])[V, B](decision: V on P)(body: V => MultiParty[F]): F[B]
+
   def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
       PeerTag[To],
@@ -152,6 +154,8 @@ object MultiParty:
       )[V](placed: Anisotropic[RP, V] on Local): F[Map[Remote[RP], V]] =
         val Placement.Local(res, vMap) = placed.runtimeChecked
         vMap.pure
+
+      def select[P <: Peer](using PeerTag[P])[V, B](decision: V on P)(body: V => MultiParty[F]): F[B] = ???
 
       def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
           PeerTag[From],

@@ -28,3 +28,6 @@ trait Network[F[_], Local <: Peer, PeerId[P <: Peer]] extends CommunicationProto
    *   a [[NonEmptyList]] with all the reachable peers of type [[RP]].
    */
   def alivePeersOf[RP <: Peer: PeerTag]: F[NonEmptyList[PeerId[RP]]]
+
+  // todo: support alive peers unbounded (aka without considering the peer I'd like to communicate with)
+  def alivePeers[UP <: Peer]: F[NonEmptyList[PeerId[UP]]]

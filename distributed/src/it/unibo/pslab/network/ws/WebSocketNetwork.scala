@@ -24,6 +24,7 @@ import org.http4s.ember.server.EmberServerBuilder
 import sttp.capabilities.fs2.Fs2Streams
 import sttp.client4.WebSocketStreamBackend
 import sttp.client4.httpclient.fs2.HttpClientFs2Backend
+import it.unibo.pslab.network.NoPeers
 
 trait WebSocketNetwork[F[_], LP <: Peer] extends Network[F, LP, PeerRef], WebSocket
 
@@ -71,6 +72,11 @@ object WebSocketNetwork:
       NonEmptyList.fromList(filtered.toList) match
         case Some(nel) => nel.pure
         case None      => Concurrent[F].raiseError(NoSuchPeers(remotePeer, localPeer))
+
+    override def alivePeers[UP <: Peer]: F[NonEmptyList[PeerRef[UP]]] =
+      NonEmptyList.fromList(connectedPeers.keys.toList) match
+        case Some(nel) => nel.pure[F]
+        case None      => Concurrent[F].raiseError(NoPeers())
 
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
       for

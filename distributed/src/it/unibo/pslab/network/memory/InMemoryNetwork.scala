@@ -19,6 +19,7 @@ import cats.data.NonEmptyList
 import cats.effect.kernel.{ Concurrent, Ref, Resource }
 import cats.effect.std.Console
 import cats.syntax.all.*
+import it.unibo.pslab.network.NoPeers
 
 trait InMemoryNetwork[F[_], LP <: Peer] extends Network[F, LP, PeerRef], Memory
 
@@ -75,6 +76,11 @@ object InMemoryNetwork:
         case Some(nel) => nel.pure[F]
         case None      => Concurrent[F].raiseError(NoSuchPeers(remotePeerTag, summon[PeerTag[LP]]))
 
+    override def alivePeers[UP <: Peer]: F[NonEmptyList[PeerRef[UP]]] =
+      val filtered = knownPeers.toList
+      NonEmptyList.fromList(filtered) match
+        case Some(nel) => nel.pure[F]
+        case None      => Concurrent[F].raiseError(NoPeers())
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
       messagesDispatcher.route(message.payload, message.resource, message.from, to)
 
