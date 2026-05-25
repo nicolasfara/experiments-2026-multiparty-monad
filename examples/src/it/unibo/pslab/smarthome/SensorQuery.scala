@@ -87,6 +87,9 @@ object SensorQuery:
   final case class NightLightCommand(on: Boolean, reason: String) derives ReadWriter
   final case class LightCommandAck(message: String) derives ReadWriter
 
+  enum ServerPath derives ReadWriter:
+    case ActuateNightLight, ReportAlreadySatisfied
+
   inline def nightComfort[F[_]: {MonadThrow, Random, Console}, P <: Peer: PeerTag](using MultiParty[F]): F[Unit] =
     for
       reading <- on[Device](sampleReading[P, F])
@@ -109,22 +112,47 @@ object SensorQuery:
           planned = planNightLightCommand(current, approvedPolicy)
           _ <- log("Server planned night-light command: ")(planned)
         yield planned
-      commandOnNightLight <- isotropicComm[Server, NightLight](command)
-      ack <- on[NightLight]:
+      path <- on[Server]:
         for
-          applied <- take(commandOnNightLight)
-          _ <- log("Night light applied command: ")(applied)
-        yield LightCommandAck(s"Night light ${if applied.on then "on" else "off"}: ${applied.reason}")
-      ackOnServer <- coAnisotropicComm[NightLight, Server](ack)
-      dashboardAck <- on[Server]:
-        for
-          acknowledgements <- takeAll(ackOnServer)
-          messages = acknowledgements.values.map(_.message).toList.sorted
-          _ <- log("Server received actuator acknowledgements: ")(messages)
-        yield LightCommandAck(messages.mkString("; "))
-      ackOnDashboard <- comm[Server, Dashboard](dashboardAck)
-      _ <- on[Dashboard]:
-        take(ackOnDashboard) >>= log("Dashboard received actuation result: ")
+          current <- take(snapshot)
+          planned <- take(command)
+          selected =
+            if planned.on != current.nightLightOn then ServerPath.ActuateNightLight
+            else ServerPath.ReportAlreadySatisfied
+          _ <- log("Server selected choreography path: ")(selected)
+        yield selected
+      _ <- select[Server](path):
+        case ServerPath.ActuateNightLight =>
+          for
+            commandOnNightLight <- isotropicComm[Server, NightLight](command)
+            ack <- on[NightLight]:
+              for
+                applied <- take(commandOnNightLight)
+                _ <- log("Night light applied command: ")(applied)
+              yield LightCommandAck(s"Night light ${if applied.on then "on" else "off"}: ${applied.reason}")
+            ackOnServer <- coAnisotropicComm[NightLight, Server](ack)
+            dashboardAck <- on[Server]:
+              for
+                acknowledgements <- takeAll(ackOnServer)
+                messages = acknowledgements.values.map(_.message).toList.sorted
+                _ <- log("Server received actuator acknowledgements: ")(messages)
+              yield LightCommandAck(messages.mkString("; "))
+            ackOnDashboard <- comm[Server, Dashboard](dashboardAck)
+            _ <- on[Dashboard]:
+              take(ackOnDashboard) >>= log("Dashboard received actuation result: ")
+          yield ()
+        case ServerPath.ReportAlreadySatisfied =>
+          for
+            dashboardAck <- on[Server]:
+              for
+                planned <- take(command)
+                ack = LightCommandAck(s"Night light unchanged: ${planned.reason}")
+                _ <- log("Server skipped night-light actuation: ")(ack.message)
+              yield ack
+            ackOnDashboard <- comm[Server, Dashboard](dashboardAck)
+            _ <- on[Dashboard]:
+              take(ackOnDashboard) >>= log("Dashboard received actuation result: ")
+          yield ()
     yield ()
 
   def buildSnapshot[F[_]: Monad](using lang: MultiParty[F], server: Label[Server])(
