@@ -146,12 +146,12 @@ object MqttNetwork:
           case Some(nel) => nel.pure
           case None      => Concurrent[F].raiseError(NoSuchPeers(remotePeerTag, localPeerTag))
 
-    override def alivePeers[UP <: Peer]: F[NonEmptyList[PeerRef[UP]]] = 
-       peers.get.flatMap: peers =>
+    override def alivePeers[UP <: Peer]: F[NonEmptyList[PeerRef[UP]]] =
+      peers.get.flatMap: peers =>
         NonEmptyList.fromList(peers.toList) match
           case Some(nel) => nel.pure
           case None      => Concurrent[F].raiseError(NoPeers())
-      
+
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
       dispatchAny(to, message)
 

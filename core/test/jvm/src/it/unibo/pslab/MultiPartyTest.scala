@@ -63,7 +63,9 @@ class MultiPartyTest extends AnyFunSpec, should.Matchers, Stubs:
         resource: Reference,
         from: NonEmptyList[PeerRef[Peer]],
     ): Either[Throwable, (PeerRef[Peer], V)] =
-      received.map((sender, value) => sender -> value.asInstanceOf[V]).toRight(RuntimeException("No selection received"))
+      received
+        .map((sender, value) => sender -> value.asInstanceOf[V])
+        .toRight(RuntimeException("No selection received"))
 
     override def alivePeersOf[RP <: Peer: PeerTag]: Either[Throwable, NonEmptyList[PeerRef[RP]]] =
       alive.asInstanceOf[NonEmptyList[PeerRef[RP]]].asRight

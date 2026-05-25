@@ -106,7 +106,7 @@ trait BaseNetwork[F[_]: {Concurrent, NetworkMonitor as monitor}, LP <: Peer] ext
       arrived <- takeAlreadyArrived
       encoded <- arrived match
         case Some(value) => value.pure
-        case None =>
+        case None        =>
           for
             toWaitOn <- firstArrivalMsgs.modify: messages =>
               val waiter = FirstArrivalWaiter(allowed, deferred)
@@ -140,7 +140,7 @@ trait BaseNetwork[F[_]: {Concurrent, NetworkMonitor as monitor}, LP <: Peer] ext
         (updated, matching.headOption.map(_.deferred))
       _ <- firstArrival match
         case Some(waiter) => waiter.complete(sender -> payload).void
-        case None =>
+        case None         =>
           for
             exact <- takePeerMsgOrDefer((from, resource))
             _ <- exact.complete(payload)
