@@ -15,7 +15,7 @@ import it.unibo.pslab.network.{
   PeerRef,
   ScalaTropyMessage,
 }
-import it.unibo.pslab.network.BaseNetwork.IncomingMessages
+import it.unibo.pslab.network.BaseNetwork.{ FirstArrivalMessages, IncomingMessages }
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.{ NonEmptyList, OptionT }
@@ -76,9 +76,10 @@ object MqttNetwork:
       _ <- Resource.eval(F.println(s"=== Peers startup configuration [wait ${networkConfig.initialWaitWindow}] ==="))
       session <- Session(transportConfig, sessionConfig)
       incomingMsgs <- Resource.eval(Ref.of(IncomingMessages.empty[F, PeerId]))
+      firstArrivalMsgs <- Resource.eval(Ref.of(FirstArrivalMessages.empty[F, PeerId]))
       alivePeers <- Resource.eval(Ref.of(Set.empty[PeerId]))
       started <- Resource.eval(Deferred[F, Unit])
-      network = MqttNetworkImpl(networkConfig, session, started, alivePeers, incomingMsgs)
+      network = MqttNetworkImpl(networkConfig, session, started, alivePeers, incomingMsgs, firstArrivalMsgs)
       _ <- Resource.eval(network.subscribe)
       _ <- network.handleIncomingMessage.background
       _ <- network.publishPresenceUntilStart.background
@@ -96,6 +97,7 @@ object MqttNetwork:
       started: Deferred[F, Unit],
       peers: Ref[F, Set[PeerRef[?]]],
       protected val incomingMsgs: Ref[F, IncomingMessages[F, PeerRef[?]]],
+      protected val firstArrivalMsgs: Ref[F, FirstArrivalMessages[F, PeerRef[Peer]]],
   ) extends MqttNetwork[F, LP]
       with BaseNetwork[F, LP]:
 
@@ -134,8 +136,7 @@ object MqttNetwork:
     def onApplicationMsg(data: Array[Byte]): F[Unit] =
       for
         ScalaTropyMessage(address, resource, payload) = upickle.readBinary[ScalaTropyMessage](data)
-        existing <- takePeerMsgOrDefer((address, resource))
-        _ <- existing.complete(payload)
+        _ <- deliver(address, resource, payload)
       yield ()
 
     override def alivePeersOf[RP <: Peer: PeerTag as remotePeerTag]: F[NonEmptyList[PeerRef[RP]]] =
@@ -152,6 +153,9 @@ object MqttNetwork:
           case None      => Concurrent[F].raiseError(NoPeers())
       
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
+      dispatchAny(to, message)
+
+    override def dispatchAny(to: PeerRef[?], message: ScalaTropyMessage): F[Unit] =
       for
         payload <- F.catchNonFatal(upickle.writeBinary(message))
         _ <- session.publish(Topics.inMsgs(networkConfig.appId, to.tag, to.id), payload, AtLeastOnce)

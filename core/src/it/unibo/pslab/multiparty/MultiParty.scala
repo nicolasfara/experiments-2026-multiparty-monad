@@ -27,7 +27,7 @@ trait MultiParty[F[_]: Monad]:
       Label[Local],
   )[V](placed: Anisotropic[RP, V] on Local): F[Map[Remote[RP], V]]
 
-  def select[P <: Peer](using PeerTag[P])[V, B](decision: V on P)(body: V => MultiParty[F]): F[B]
+  def select[P <: Peer](using PeerTag[P])[V: Codable[F], B](decision: V on P)(body: V => F[B]): F[B]
 
   def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
@@ -87,6 +87,11 @@ object MultiParty:
       Label[Local],
   )[F[_], V](using lang: MultiParty[F])(placed: lang.Anisotropic[RP, V] on Local): F[Map[lang.Remote[RP], V]] =
     lang.takeAll(placed)
+
+  def select[P <: Peer](using
+      PeerTag[P],
+  )[F[_]](using lang: MultiParty[F])[V: Codable[F], B](decision: V on P)(body: V => F[B]): F[B] =
+    lang.select[P](decision)(body)
 
   def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
       PeerTag[From],
@@ -155,7 +160,26 @@ object MultiParty:
         val Placement.Local(res, vMap) = placed.runtimeChecked
         vMap.pure
 
-      def select[P <: Peer](using PeerTag[P])[V, B](decision: V on P)(body: V => MultiParty[F]): F[B] = ???
+      def select[Selector <: Peer](using selector: PeerTag[Selector])[V: Codable[F], B](
+          decision: V on Selector,
+      )(body: V => F[B]): F[B] =
+        for
+          reachable <- reachableByNetwork
+          (sender, selected) <-
+            if runtimePeer <:< selector then
+              val Placement.Local(_, value) = decision.runtimeChecked
+              (none[Remote[Peer]], value).pure
+            else
+              val Placement.Remote(ref) = decision.runtimeChecked
+              for
+                receiver <- reachable.head._2.receiveFromAny(ref, reachable.map(_._1))
+                (receivedFrom, value) = receiver
+              yield (receivedFrom.some, value)
+          _ <- reachable.toList
+            .filterNot((peer, _) => sender.contains(peer))
+            .traverse_((peer, network) => network.sendToAny(selected, decision.res, peer))
+          result <- body(selected)
+        yield result
 
       def comm[From <: TiedWithSingle[To], To <: TiedWithSingle[From]](using
           PeerTag[From],
@@ -256,3 +280,18 @@ object MultiParty:
         networks
           .collectFirst { case (peer, network) if remotePeer <:< peer => network }
           .liftTo[F](RuntimeException(s"No network found for $remotePeer. This should not happen, report this!"))
+
+      private type Reachable = (Remote[Peer], Network[F, P, PeerId])
+
+      private def reachableByNetwork: F[NonEmptyList[Reachable]] =
+        networks.values.toList.distinct
+          .traverse: network =>
+            network.alivePeers[Peer].map: peers =>
+              peers.toList
+                .filterNot(_ == network.local)
+                .map(peer => peer -> network)
+          .map(_.flatten.distinctBy(_._1))
+          .flatMap: peers =>
+            NonEmptyList
+              .fromList(peers)
+              .liftTo[F](RuntimeException("No reachable peers available for select gossip"))

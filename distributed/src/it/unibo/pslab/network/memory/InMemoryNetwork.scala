@@ -12,7 +12,7 @@ import it.unibo.pslab.network.{
   PeerRef,
   ScalaTropyMessage,
 }
-import it.unibo.pslab.network.BaseNetwork.IncomingMessages
+import it.unibo.pslab.network.BaseNetwork.{ FirstArrivalMessages, IncomingMessages }
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.NonEmptyList
@@ -56,8 +56,9 @@ object InMemoryNetwork:
     Resource.make(acquire =
       for
         incomingMsgs <- Ref.of(IncomingMessages.empty[F, PeerId])
+        firstArrivalMsgs <- Ref.of(FirstArrivalMessages.empty[F, PeerId])
         localAddress = PeerId(localPeerTag, localId)
-        network = new InMemoryNetworkImpl(localAddress, knownPeers, messagesDispatcher, incomingMsgs)
+        network = new InMemoryNetworkImpl(localAddress, knownPeers, messagesDispatcher, incomingMsgs, firstArrivalMsgs)
         _ <- messagesDispatcher.register(localAddress, network.asHandle)
       yield network,
     )(release = network => messagesDispatcher.unregister(network.local))
@@ -67,6 +68,7 @@ object InMemoryNetwork:
       knownPeers: NonEmptyList[PeerId],
       messagesDispatcher: MessagesDispatcher[F],
       protected val incomingMsgs: Ref[F, IncomingMessages[F, PeerId]],
+      protected val firstArrivalMsgs: Ref[F, FirstArrivalMessages[F, PeerId]],
   ) extends InMemoryNetwork[F, LP]
       with BaseNetwork[F, LP]:
 
@@ -82,11 +84,11 @@ object InMemoryNetwork:
         case Some(nel) => nel.pure[F]
         case None      => Concurrent[F].raiseError(NoPeers())
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
+      dispatchAny(to, message)
+
+    override def dispatchAny(to: PeerRef[?], message: ScalaTropyMessage): F[Unit] =
       messagesDispatcher.route(message.payload, message.resource, message.from, to)
 
     def asHandle: NetworkHandle[F] = new NetworkHandle[F]:
       override def deliver(payload: Array[Byte], resource: Reference, from: PeerId): F[Unit] =
-        for
-          existing <- takePeerMsgOrDefer((from, resource))
-          _ <- existing.complete(payload)
-        yield ()
+        InMemoryNetworkImpl.this.deliver(from, resource, payload)

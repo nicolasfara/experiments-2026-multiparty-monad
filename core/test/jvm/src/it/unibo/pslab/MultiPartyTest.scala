@@ -31,6 +31,46 @@ class MultiPartyTest extends AnyFunSpec, should.Matchers, Stubs:
   type Bar <: Foo
   type Baz <: { type Tie <: via[AnyProtocol toSingle Foo] }
 
+  final class SelectNetwork[Local <: Peer](
+      override val local: PeerRef[Local],
+      alive: NonEmptyList[PeerRef[Peer]],
+      received: Option[(PeerRef[Peer], Boolean)] = None,
+  ) extends Network[[A] =>> Either[Throwable, A], Local, PeerRef]:
+    var sent: List[(Boolean, PeerRef[Peer])] = Nil
+
+    override def send[V: Encodable[[A] =>> Either[Throwable, A]], To <: Peer: PeerTag](
+        value: V,
+        resource: Reference,
+        to: PeerRef[To],
+    ): Either[Throwable, Unit] =
+      sendToAny(value, resource, to)
+
+    override def sendToAny[V: Encodable[[A] =>> Either[Throwable, A]]](
+        value: V,
+        resource: Reference,
+        to: PeerRef[Peer],
+    ): Either[Throwable, Unit] =
+      sent = sent :+ (value.asInstanceOf[Boolean] -> to)
+      ().asRight
+
+    override def receive[V: Decodable[[A] =>> Either[Throwable, A]], From <: Peer: PeerTag](
+        resource: Reference,
+        from: PeerRef[From],
+    ): Either[Throwable, V] =
+      RuntimeException("receive should not be used by select tests").asLeft
+
+    override def receiveFromAny[V: Decodable[[A] =>> Either[Throwable, A]]](
+        resource: Reference,
+        from: NonEmptyList[PeerRef[Peer]],
+    ): Either[Throwable, (PeerRef[Peer], V)] =
+      received.map((sender, value) => sender -> value.asInstanceOf[V]).toRight(RuntimeException("No selection received"))
+
+    override def alivePeersOf[RP <: Peer: PeerTag]: Either[Throwable, NonEmptyList[PeerRef[RP]]] =
+      alive.asInstanceOf[NonEmptyList[PeerRef[RP]]].asRight
+
+    override def alivePeers[UP <: Peer]: Either[Throwable, NonEmptyList[PeerRef[UP]]] =
+      alive.asInstanceOf[NonEmptyList[PeerRef[UP]]].asRight
+
   describe("The on operator"):
     describe("when involves a peer class with subtypes"):
       it("should evaluate the expression even in the subtypes classes"):
@@ -75,3 +115,41 @@ class MultiPartyTest extends AnyFunSpec, should.Matchers, Stubs:
             _: PeerTag[Baz],
           ))
           .times shouldBe 1
+
+  describe("The select operator"):
+    it("should spread the selected value from the peer that owns the decision"):
+      def testProgram[F[_]: MonadThrow](using MultiParty[F]) = for
+        decision <- on[Foo](true.pure)
+        result <- select[Foo](decision)(_.pure)
+      yield result shouldBe true
+
+      val network = SelectNetwork[Bar]("selector", NonEmptyList.of("relay", "downstream"))
+      ScalaTropy(testProgram[[A] =>> Either[Throwable, A]]).projectedOn[Bar]:
+        tiedTo[Foo] via network
+        tiedTo[Baz] via network
+
+      network.sent should contain theSameElementsInOrderAs List(true -> "relay", true -> "downstream")
+
+    it("should forward a received selection to reachable peers except the sender"):
+      def testProgram[F[_]: MonadThrow](using MultiParty[F]) = for
+        decision <- on[Foo](true.pure)
+        result <- select[Foo](decision)(_.pure)
+      yield result shouldBe true
+
+      val network = SelectNetwork[Baz]("relay", NonEmptyList.of("selector", "downstream"), Some("selector" -> true))
+      ScalaTropy(testProgram[[A] =>> Either[Throwable, A]]).projectedOn[Baz]:
+        tiedTo[Foo] via network
+
+      network.sent should contain theSameElementsInOrderAs List(true -> "downstream")
+
+    it("should let a downstream peer take the branch from a relayed selection"):
+      def testProgram[F[_]: MonadThrow](using MultiParty[F]) = for
+        decision <- on[Foo](false.pure)
+        result <- select[Foo](decision)(_.pure)
+      yield result shouldBe false
+
+      val network = SelectNetwork[Baz]("downstream", NonEmptyList.of("relay"), Some("relay" -> false))
+      ScalaTropy(testProgram[[A] =>> Either[Throwable, A]]).projectedOn[Baz]:
+        tiedTo[Foo] via network
+
+      network.sent shouldBe empty

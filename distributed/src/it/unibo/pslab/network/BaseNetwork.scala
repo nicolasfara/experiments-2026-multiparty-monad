@@ -5,6 +5,7 @@ import it.unibo.pslab.multiparty.Environment.Reference
 import it.unibo.pslab.network.Codable.{ decode, encode }
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
+import cats.data.NonEmptyList
 import cats.effect.kernel.{ Concurrent, Deferred, Ref }
 import cats.syntax.all.*
 import upickle.default.ReadWriter
@@ -27,6 +28,11 @@ object PeerId:
 case class ScalaTropyMessage(from: PeerRef[?], resource: Reference, payload: Array[Byte]) derives ReadWriter
 
 object BaseNetwork:
+  final case class FirstArrivalWaiter[F[_], Id](
+      from: Set[Id],
+      deferred: Deferred[F, (Id, Array[Byte])],
+  )
+
   /**
    * A registry of deferred messages awaiting completion.
    *
@@ -34,18 +40,23 @@ object BaseNetwork:
    * synchronization between senders and receivers, regardless of the order in which they arrive.
    */
   type IncomingMessages[F[_], Id] = Map[(Id, Environment.Reference), Deferred[F, Array[Byte]]]
+  type FirstArrivalMessages[F[_], Id] = Map[Environment.Reference, List[FirstArrivalWaiter[F, Id]]]
 
   object IncomingMessages:
     def empty[F[_], Id]: IncomingMessages[F, Id] = Map.empty
+
+  object FirstArrivalMessages:
+    def empty[F[_], Id]: FirstArrivalMessages[F, Id] = Map.empty
 
 /**
  * Base trait providing common functionality for Network implementations.
  */
 trait BaseNetwork[F[_]: {Concurrent, NetworkMonitor as monitor}, LP <: Peer] extends Network[F, LP, PeerRef]:
 
-  import BaseNetwork.IncomingMessages
+  import BaseNetwork.{ FirstArrivalWaiter, IncomingMessages }
 
   protected val incomingMsgs: Ref[F, IncomingMessages[F, PeerRef[?]]]
+  protected val firstArrivalMsgs: Ref[F, BaseNetwork.FirstArrivalMessages[F, PeerRef[Peer]]]
 
   /**
    * Retrieves an existing deferred for a message from a specific peer and resource, or creates a new one if it doesn't
@@ -74,11 +85,69 @@ trait BaseNetwork[F[_]: {Concurrent, NetworkMonitor as monitor}, LP <: Peer] ext
       data <- toWaitOn.get.flatTap(monitor.onReceive).flatMap(decode)
     yield data
 
+  override def receiveFromAny[V: Decodable[F]](
+      resource: Reference,
+      from: NonEmptyList[PeerRef[Peer]],
+  ): F[(PeerRef[Peer], V)] =
+    val allowed = from.toList.toSet
+    def takeAlreadyArrived: F[Option[(PeerRef[?], Array[Byte])]] =
+      incomingMsgs.get.flatMap: messages =>
+        messages.toList
+          .collectFirstSomeM:
+            case ((sender, `resource`), message) if allowed(sender) =>
+              message.tryGet.map(_.map(sender.asInstanceOf[PeerRef[Peer]] -> _))
+            case _ => none[(PeerRef[?], Array[Byte])].pure
+          .flatTap:
+            case Some((sender, _)) => incomingMsgs.update(_ - ((sender, resource)))
+            case None              => Concurrent[F].unit
+
+    for
+      deferred <- Deferred[F, (PeerRef[Peer], Array[Byte])]
+      arrived <- takeAlreadyArrived
+      encoded <- arrived match
+        case Some(value) => value.pure
+        case None =>
+          for
+            toWaitOn <- firstArrivalMsgs.modify: messages =>
+              val waiter = FirstArrivalWaiter(allowed, deferred)
+              messages.get(resource) match
+                case Some(found) => (messages.updated(resource, found :+ waiter), deferred)
+                case None        => (messages.updated(resource, List(waiter)), deferred)
+            value <- toWaitOn.get
+          yield value
+      (sender, data) = encoded
+      decoded <- monitor.onReceive(data) >> decode[F, V](data)
+    yield sender -> decoded
+
   override def send[V: Encodable[F], To <: Peer: PeerTag](value: V, resource: Reference, to: PeerRef[To]): F[Unit] =
+    sendToAny(value, resource, to.asInstanceOf[PeerRef[Peer]])
+
+  override def sendToAny[V: Encodable[F]](value: V, resource: Reference, to: PeerRef[Peer]): F[Unit] =
     for
       encodedValue <- encode(value).flatTap(monitor.onSend)
-      _ <- dispatch[To](to, ScalaTropyMessage(local, resource, encodedValue))
+      _ <- dispatchAny(to, ScalaTropyMessage(local, resource, encodedValue))
+    yield ()
+
+  protected def deliver(from: PeerRef[?], resource: Reference, payload: Array[Byte]): F[Unit] =
+    val sender = from.asInstanceOf[PeerRef[Peer]]
+    for
+      firstArrival <- firstArrivalMsgs.modify: messages =>
+        val waiters = messages.getOrElse(resource, Nil)
+        val (matching, remaining) = waiters.partition(_.from(sender))
+        val updated =
+          if remaining.isEmpty then messages - resource
+          else messages.updated(resource, remaining)
+        (updated, matching.headOption.map(_.deferred))
+      _ <- firstArrival match
+        case Some(waiter) => waiter.complete(sender -> payload).void
+        case None =>
+          for
+            exact <- takePeerMsgOrDefer((from, resource))
+            _ <- exact.complete(payload)
+          yield ()
     yield ()
 
   /** Low-level dispatch method to send the given application message to the specified peer. */
   def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit]
+
+  def dispatchAny(to: PeerRef[?], message: ScalaTropyMessage): F[Unit]

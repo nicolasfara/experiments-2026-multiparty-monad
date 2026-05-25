@@ -10,7 +10,7 @@ import it.unibo.pslab.network.{
   ScalaTropyMessage,
   WebSocket,
 }
-import it.unibo.pslab.network.BaseNetwork.IncomingMessages
+import it.unibo.pslab.network.BaseNetwork.{ FirstArrivalMessages, IncomingMessages }
 import it.unibo.pslab.peers.Peers.{ Peer, PeerTag }
 
 import cats.data.NonEmptyList
@@ -38,9 +38,10 @@ object WebSocketNetwork:
     for
       alivePeers <- Resource.eval(Ref.of[F, Map[String, Queue[F, Array[Byte]]]](Map.empty))
       incomingMsgs <- Resource.eval(Ref.of[F, IncomingMessages[F, PeerRef[?]]](IncomingMessages.empty))
+      firstArrivalMsgs <- Resource.eval(Ref.of[F, FirstArrivalMessages[F, PeerRef[Peer]]](FirstArrivalMessages.empty))
       supervisor <- Supervisor[F]
       backend = HttpClientFs2Backend.resource[F]()
-      impl = WebSocketNetworkImpl(id, port, knownPeers, supervisor, backend, alivePeers, incomingMsgs)
+      impl = WebSocketNetworkImpl(id, port, knownPeers, supervisor, backend, alivePeers, incomingMsgs, firstArrivalMsgs)
       _ <- EmberServerBuilder
         .default[F]
         .withHost(host"localhost")
@@ -60,6 +61,7 @@ object WebSocketNetwork:
       backend: Resource[F, WebSocketStreamBackend[F, Fs2Streams[F]]],
       protected val alivePeers: Ref[F, Map[String, Queue[F, Array[Byte]]]],
       protected val incomingMsgs: Ref[F, IncomingMessages[F, PeerRef[?]]],
+      protected val firstArrivalMsgs: Ref[F, FirstArrivalMessages[F, PeerRef[Peer]]],
   ) extends WebSocketNetwork[F, LP],
         WebSocketConnector[F](supervisor, backend),
         WebSocketAcceptor[F],
@@ -79,6 +81,9 @@ object WebSocketNetwork:
         case None      => Concurrent[F].raiseError(NoPeers())
 
     override def dispatch[To <: Peer: PeerTag](to: PeerRef[To], message: ScalaTropyMessage): F[Unit] =
+      dispatchAny(to, message)
+
+    override def dispatchAny(to: PeerRef[?], message: ScalaTropyMessage): F[Unit] =
       for
         toAddress <- F.fromOption(connectedPeers.get(to), NoSuchPeers(to.tag, localPeer))
         _ <- emit(local, to, toAddress, message)
@@ -87,8 +92,7 @@ object WebSocketNetwork:
     override def onMessage(payload: Array[Byte]): F[Unit] =
       for
         ScalaTropyMessage(address, resource, data) <- F.catchNonFatal(upickle.readBinary[ScalaTropyMessage](payload))
-        d <- takePeerMsgOrDefer((address, resource))
-        _ <- d.complete(data)
+        _ <- deliver(address, resource, data)
       yield ()
   end WebSocketNetworkImpl
 end WebSocketNetwork

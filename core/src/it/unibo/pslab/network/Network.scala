@@ -21,7 +21,14 @@ trait Network[F[_], Local <: Peer, PeerId[P <: Peer]] extends CommunicationProto
 
   def send[V: Encodable[F], To <: Peer: PeerTag](value: V, resource: Reference, to: PeerId[To]): F[Unit]
 
+  def sendToAny[V: Encodable[F]](value: V, resource: Reference, to: PeerId[Peer]): F[Unit]
+
   def receive[V: Decodable[F], From <: Peer: PeerTag](resource: Reference, from: PeerId[From]): F[V]
+
+  def receiveFromAny[V: Decodable[F]](
+      resource: Reference,
+      from: NonEmptyList[PeerId[Peer]],
+  ): F[(PeerId[Peer], V)]
 
   /**
    * @return
